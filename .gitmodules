@@ -1,0 +1,9 @@
+[submodule "apps/go_infra_link"]
+	path = apps/go_infra_link
+	url = https://github.com/besart951/go_infra_link.git
+[submodule "apps/planer_link"]
+	path = apps/planer_link
+	url = https://github.com/besart951/planer_link.git
+[submodule "apps/loka_link"]
+	path = apps/loka_link
+	url = https://github.com/besart951/loka_link.git

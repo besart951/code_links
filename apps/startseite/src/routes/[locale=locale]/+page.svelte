@@ -1,17 +1,39 @@
 <script lang="ts">
-  const products = [
-    { name: 'infra_link', href: 'https://infra.codelinks.ch', text: 'Gebaeudeautomation, BACnet, SPS und Feldgeraete.' },
-    { name: 'planer_link', href: 'https://planer.codelinks.ch', text: 'Dienstplanung, Tourenplanung, PDF und Excel.' },
-    { name: 'loka_link', href: 'https://loka.codelinks.ch', text: 'Naechstes Produkt im CodeLinks Verbund.' }
-  ];
+  import { alternateUrls, jsonLd, localizedAbsoluteUrl, localizedHref, site } from '$lib/site';
+  import type { PageData } from './$types';
+
+  let { data }: { data: PageData } = $props();
+
+  const text = $derived(data.siteCopy);
+  const canonical = $derived(localizedAbsoluteUrl('/', data.locale));
+  const organizationJsonLd = $derived(jsonLd({
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: 'CodeLinks',
+    url: site.url,
+    description: text.description,
+    sameAs: []
+  }));
 </script>
 
 <svelte:head>
-  <title>CodeLinks</title>
+  <title>{text.title}</title>
   <meta
     name="description"
-    content="CodeLinks ist die gemeinsame Plattform fuer spezialisierte Fachprodukte."
+    content={text.description}
   />
+  <link rel="canonical" href={canonical} />
+  {#each alternateUrls('/') as alternate}
+    <link rel="alternate" hreflang={alternate.hrefLang} href={alternate.href} />
+  {/each}
+  <link rel="alternate" hreflang="x-default" href={localizedAbsoluteUrl('/', 'de')} />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="CodeLinks" />
+  <meta property="og:title" content={text.title} />
+  <meta property="og:description" content={text.description} />
+  <meta property="og:url" content={canonical} />
+  <meta name="twitter:card" content="summary_large_image" />
+  {@html organizationJsonLd}
 </svelte:head>
 
 <main class="page">
@@ -22,40 +44,27 @@
       <div class="grid"></div>
     </div>
     <div class="hero__content">
-      <p class="eyebrow">CodeLinks Plattform</p>
+      <p class="eyebrow">{text.eyebrow}</p>
       <h1>CodeLinks</h1>
-      <p class="lead">
-        Ein Monorepo fuer eigenstaendige Produkte mit gemeinsamer Identitaet,
-        Mandantensteuerung und Abo-basierten Features.
-      </p>
+      <p class="lead">{text.description}</p>
       <div class="actions">
-        <a href="https://auth.codelinks.ch">Anmelden</a>
-        <a href="https://infra.codelinks.ch" class="secondary">Produkte oeffnen</a>
+        <a href="https://auth.codelinks.ch">{text.signIn}</a>
+        <a href={localizedHref('/produkte/infra-link', data.locale)} class="secondary">{text.viewProducts}</a>
       </div>
     </div>
   </section>
 
-  <section class="products" aria-label="Produkte">
-    {#each products as product}
-      <a class="product" href={product.href}>
+  <section class="products" aria-label={text.productsLabel}>
+    {#each data.products as product}
+      <a class="product" href={localizedHref(`/produkte/${product.slug}`, data.locale)}>
         <span>{product.name}</span>
-        <p>{product.text}</p>
+        <p>{product.summary}</p>
       </a>
     {/each}
   </section>
 </main>
 
 <style>
-  :global(body) {
-    margin: 0;
-    min-width: 320px;
-    font-family:
-      Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-      sans-serif;
-    color: #14211f;
-    background: #f4f7f5;
-  }
-
   .page {
     min-height: 100vh;
   }
@@ -67,16 +76,13 @@
     display: grid;
     place-items: center start;
     padding: clamp(32px, 8vw, 96px);
-    background: #dfe9e4;
+    background: var(--hero-bg);
   }
 
   .hero__media {
     position: absolute;
     inset: 0;
-    background:
-      linear-gradient(120deg, rgba(20, 33, 31, 0.9), rgba(20, 33, 31, 0.18)),
-      radial-gradient(circle at 75% 25%, #78b7a2, transparent 28%),
-      linear-gradient(135deg, #173b36, #e2ede7);
+    background: var(--hero-media);
   }
 
   .grid {
@@ -110,7 +116,7 @@
   .hero__content {
     position: relative;
     max-width: 760px;
-    color: white;
+    color: var(--hero-text);
   }
 
   .eyebrow {
@@ -172,12 +178,12 @@
   .product {
     min-height: 132px;
     border-radius: 8px;
-    border: 1px solid #d7dfda;
-    background: #ffffff;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
     padding: 22px;
-    color: #14211f;
+    color: var(--text);
     text-decoration: none;
-    box-shadow: 0 18px 40px rgba(21, 45, 40, 0.12);
+    box-shadow: 0 18px 40px var(--panel-shadow);
   }
 
   .product span {
@@ -188,7 +194,7 @@
 
   .product p {
     margin: 12px 0 0;
-    color: #52615d;
+    color: var(--muted);
     line-height: 1.5;
   }
 

@@ -1,0 +1,131 @@
+name: codelinks-prod
+
+services:
+  caddy:
+    image: caddy:2.11.2-alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    env_file:
+      - path: ../env/startseite.env
+        required: false
+    volumes:
+      - ../caddy/Caddyfile.prod:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - startseite
+      - platform-api
+      - infra-frontend
+      - infra-backend
+      - planer-web
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:18.3-alpine3.23
+    env_file:
+      - path: ../env/postgres.env
+        required: false
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER:-postgres} -d $${POSTGRES_DB:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  platform-migrate:
+    build:
+      context: ../../platform
+      dockerfile: Dockerfile
+      target: runtime
+    command: ["platform-migrate"]
+    env_file:
+      - path: ../env/platform.env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  platform-api:
+    build:
+      context: ../../platform
+      dockerfile: Dockerfile
+      target: runtime
+    env_file:
+      - path: ../env/platform.env
+        required: false
+    depends_on:
+      platform-migrate:
+        condition: service_completed_successfully
+    restart: unless-stopped
+
+  infra-migrate:
+    build:
+      context: ../../apps/infra_link/backend
+      dockerfile: Dockerfile
+      target: bootstrap
+    env_file:
+      - path: ../env/infra_link.env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  infra-backend:
+    build:
+      context: ../../apps/infra_link/backend
+      dockerfile: Dockerfile
+      target: runtime
+    env_file:
+      - path: ../env/infra_link.env
+        required: false
+    depends_on:
+      infra-migrate:
+        condition: service_completed_successfully
+      platform-api:
+        condition: service_started
+    restart: unless-stopped
+
+  infra-frontend:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/infra-link-frontend.Dockerfile
+    environment:
+      BACKEND_UPSTREAM: infra-backend:8080
+    depends_on:
+      infra-backend:
+        condition: service_started
+    restart: unless-stopped
+
+  planer-web:
+    build:
+      context: ../..
+      dockerfile: deploy/docker/planer-link.Dockerfile
+    env_file:
+      - path: ../env/planer_link.env
+        required: false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      platform-api:
+        condition: service_started
+    restart: unless-stopped
+
+  startseite:
+    build:
+      context: ../..
+      dockerfile: apps/startseite/Dockerfile
+    env_file:
+      - path: ../env/startseite.env
+        required: false
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  caddy_data:
+  caddy_config:

@@ -4,7 +4,7 @@ WORKDIR /repo
 COPY package.json pnpm-workspace.yaml turbo.json tsconfig.base.json pnpm-lock.yaml* ./
 COPY packages ./packages
 COPY apps/startseite ./apps/startseite
-RUN pnpm install --filter @codelinks/startseite... --frozen-lockfile=false
+RUN pnpm install --filter @codelinks/startseite... --frozen-lockfile
 RUN pnpm --filter @codelinks/startseite build
 
 FROM node:24-alpine AS runtime

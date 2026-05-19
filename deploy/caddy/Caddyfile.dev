@@ -1,0 +1,45 @@
+{
+	auto_https off
+}
+
+http://codelinks.localhost {
+	reverse_proxy startseite:3000
+}
+
+http://auth.codelinks.localhost,
+http://platform.codelinks.localhost,
+http://api.codelinks.localhost {
+	reverse_proxy platform-api:8080
+}
+
+http://infra.codelinks.localhost {
+	handle_path /platform/* {
+		reverse_proxy platform-api:8080
+	}
+
+	handle_path /api/* {
+		reverse_proxy infra-backend:8080
+	}
+
+	reverse_proxy infra-frontend:80
+}
+
+http://planer.codelinks.localhost {
+	handle_path /platform/* {
+		reverse_proxy platform-api:8080
+	}
+
+	reverse_proxy planer-web:3000
+}
+
+http://loka.codelinks.localhost {
+	handle_path /platform/* {
+		reverse_proxy platform-api:8080
+	}
+
+	respond "loka_link is not deployed yet" 503
+}
+
+:80 {
+	respond "Use http://codelinks.localhost, http://infra.codelinks.localhost or http://planer.codelinks.localhost" 404
+}

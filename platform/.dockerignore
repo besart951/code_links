@@ -1,0 +1,7 @@
+.git
+tmp
+bin
+*.log
+.env
+.env.*
+!*.env.example

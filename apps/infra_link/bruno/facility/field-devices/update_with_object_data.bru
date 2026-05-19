@@ -1,0 +1,29 @@
+meta {
+  name: Update Field Device (from object_data template)
+  type: http
+  seq: 77
+}
+
+put {
+  url: {{baseUrl}}/api/v1/facility/field-devices/{{field_device_id}}
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  X-CSRF-Token: {{csrf_token}}
+}
+
+body:json {
+  {
+    "bmk": "BMK-FD-OD-UPDATED",
+    "description": "Update field device and clone bacnet objects from object_data",
+    "apparat_nr": 2,
+    "sps_controller_system_type_id": "{{sps_controller_system_type_id}}",
+    "system_part_id": "{{system_part_id}}",
+    "project_id": null,
+    "apparat_id": "{{apparat_id}}",
+    "object_data_id": "{{object_data_id}}"
+  }
+}

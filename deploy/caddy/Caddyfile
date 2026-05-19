@@ -1,0 +1,39 @@
+{
+	email {$CADDY_EMAIL}
+}
+
+codelinks.ch {
+	reverse_proxy startseite:3000
+}
+
+auth.codelinks.ch {
+	reverse_proxy platform-api:8080
+}
+
+infra.codelinks.ch {
+	handle_path /platform/* {
+		reverse_proxy platform-api:8080
+	}
+
+	handle_path /api/* {
+		reverse_proxy infra-backend:8080
+	}
+
+	reverse_proxy infra-frontend:80
+}
+
+planer.codelinks.ch {
+	handle_path /platform/* {
+		reverse_proxy platform-api:8080
+	}
+
+	reverse_proxy planer-web:3000
+}
+
+loka.codelinks.ch {
+	handle_path /platform/* {
+		reverse_proxy platform-api:8080
+	}
+
+	respond "loka_link is not deployed yet" 503
+}

@@ -1,0 +1,29 @@
+{
+  "name": "code-links",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.29.1",
+  "engines": {
+    "node": "^24.0.0",
+    "pnpm": "10.29.1"
+  },
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "check": "turbo run check",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "platform:dev": "go run ./platform/cmd/platform-api",
+    "platform:migrate": "go run ./platform/cmd/platform-migrate",
+    "platform:seed": "go run ./platform/cmd/platform-seed"
+  },
+  "devDependencies": {
+    "turbo": "^2.6.3",
+    "typescript": "^6.0.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "cookie": "0.7.2"
+    }
+  }
+}

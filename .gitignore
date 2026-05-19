@@ -1,0 +1,57 @@
+# OS/editor
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Node/Svelte
+node_modules/
+**/node_modules/
+**/.svelte-kit/
+**/build/
+**/dist/
+**/.vite-inspect/
+**/.pnpm-store/
+.turbo/
+
+# Go/Rust/build output
+*.exe
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+coverage.*
+*.coverprofile
+backend/bin/
+backend/tmp/
+**/tmp/
+**/target/
+
+# Local databases and app data
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+**/data/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Local secrets and generated exports
+bruno/.env
+**/backend/data/exports/

@@ -1,0 +1,137 @@
+package facility
+
+import (
+	"context"
+	domainObjectData "github.com/besart951/go_infra_link/backend/internal/domain/facility/objectdata"
+
+	"github.com/besart951/go_infra_link/backend/internal/domain"
+	domainFacility "github.com/besart951/go_infra_link/backend/internal/domain/facility"
+	"github.com/google/uuid"
+)
+
+type ObjectDataService struct {
+	baseService[domainFacility.ObjectData]
+	extRepo               domainObjectData.ObjectDataStore
+	bacnetObjectRepo      domainObjectData.BacnetObjectStore
+	objectDataBacnetStore domainObjectData.ObjectDataBacnetObjectStore
+	apparatRepo           domainFacility.ApparatRepository
+	alarmDefinitionRepo   domainFacility.AlarmDefinitionRepository
+	alarmTypeRepo         domainFacility.AlarmTypeRepository
+	deleteGuard           bacnetReferenceDeleteGuard
+	tx                    txCoordinator
+}
+
+func NewObjectDataService(
+	repo domainObjectData.ObjectDataStore,
+	bacnetObjectRepo domainObjectData.BacnetObjectStore,
+	objectDataBacnetStore domainObjectData.ObjectDataBacnetObjectStore,
+	apparatRepo domainFacility.ApparatRepository,
+	alarmDefinitionRepo domainFacility.AlarmDefinitionRepository,
+	alarmTypeRepo domainFacility.AlarmTypeRepository,
+	usageRepos ...domainFacility.BacnetReferenceUsageRepository,
+) *ObjectDataService {
+	return &ObjectDataService{
+		baseService:           newBase(repo, 10),
+		extRepo:               repo,
+		bacnetObjectRepo:      bacnetObjectRepo,
+		objectDataBacnetStore: objectDataBacnetStore,
+		apparatRepo:           apparatRepo,
+		alarmDefinitionRepo:   alarmDefinitionRepo,
+		alarmTypeRepo:         alarmTypeRepo,
+		deleteGuard:           newBacnetReferenceDeleteGuard(domainFacility.BacnetReferenceResourceObjectData, usageRepos...),
+	}
+}
+
+func (s *ObjectDataService) bindTransactions(tx txCoordinator) {
+	s.tx = tx
+}
+
+func (s *ObjectDataService) transaction() facilityTx[*ObjectDataService] {
+	return newFacilityTx(s.tx, s, func(services *Services) *ObjectDataService {
+		return services.ObjectData
+	})
+}
+
+func (s *ObjectDataService) template() objectDataTemplate {
+	return objectDataTemplate{
+		objectDataRepo:        s.extRepo,
+		bacnetObjectRepo:      s.bacnetObjectRepo,
+		objectDataBacnetStore: s.objectDataBacnetStore,
+		apparatRepo:           s.apparatRepo,
+		alarmDefinitionRepo:   s.alarmDefinitionRepo,
+		alarmTypeRepo:         s.alarmTypeRepo,
+	}
+}
+
+func (s *ObjectDataService) Create(ctx context.Context, objectData *domainFacility.ObjectData) error {
+	if err := s.template().ensureDescriptionUnique(ctx, objectData, nil); err != nil {
+		return err
+	}
+	return s.repo.Create(ctx, objectData)
+}
+
+func (s *ObjectDataService) Update(ctx context.Context, objectData *domainFacility.ObjectData) error {
+	if err := s.template().ensureDescriptionUnique(ctx, objectData, &objectData.ID); err != nil {
+		return err
+	}
+	return s.repo.Update(ctx, objectData)
+}
+
+func (s *ObjectDataService) DeleteByID(ctx context.Context, id uuid.UUID) error {
+	if err := s.deleteGuard.ensureDeleteAllowed(ctx, id); err != nil {
+		return err
+	}
+	return s.baseService.DeleteByID(ctx, id)
+}
+
+func (s *ObjectDataService) CreateTemplate(ctx context.Context, input domainFacility.ObjectDataTemplateCreate) (*domainFacility.ObjectData, error) {
+	return runWithFacilityTxResult(ctx, s.transaction(), func(txCtx context.Context, txService *ObjectDataService) (*domainFacility.ObjectData, error) {
+		return txService.template().create(txCtx, input)
+	})
+}
+
+func (s *ObjectDataService) UpdateTemplate(ctx context.Context, id uuid.UUID, input domainFacility.ObjectDataTemplateUpdate) (*domainFacility.ObjectData, error) {
+	return runWithFacilityTxResult(ctx, s.transaction(), func(txCtx context.Context, txService *ObjectDataService) (*domainFacility.ObjectData, error) {
+		return txService.template().update(txCtx, id, input)
+	})
+}
+
+func (s *ObjectDataService) ListByApparatID(ctx context.Context, page, limit int, search string, apparatID uuid.UUID) (*domain.PaginatedList[domainFacility.ObjectData], error) {
+	page, limit = domain.NormalizePagination(page, limit, s.defaultLimit)
+	return s.extRepo.GetPaginatedListWithFilters(ctx,
+		domain.PaginationParams{Page: page, Limit: limit, Search: search},
+		domainObjectData.ObjectDataFilterParams{ApparatID: &apparatID},
+	)
+}
+
+func (s *ObjectDataService) ListBySystemPartID(ctx context.Context, page, limit int, search string, systemPartID uuid.UUID) (*domain.PaginatedList[domainFacility.ObjectData], error) {
+	page, limit = domain.NormalizePagination(page, limit, s.defaultLimit)
+	return s.extRepo.GetPaginatedListWithFilters(ctx,
+		domain.PaginationParams{Page: page, Limit: limit, Search: search},
+		domainObjectData.ObjectDataFilterParams{SystemPartID: &systemPartID},
+	)
+}
+
+func (s *ObjectDataService) ListByApparatAndSystemPartID(ctx context.Context, page, limit int, search string, apparatID, systemPartID uuid.UUID) (*domain.PaginatedList[domainFacility.ObjectData], error) {
+	page, limit = domain.NormalizePagination(page, limit, s.defaultLimit)
+	return s.extRepo.GetPaginatedListWithFilters(ctx,
+		domain.PaginationParams{Page: page, Limit: limit, Search: search},
+		domainObjectData.ObjectDataFilterParams{ApparatID: &apparatID, SystemPartID: &systemPartID},
+	)
+}
+
+func (s *ObjectDataService) GetBacnetObjectIDs(ctx context.Context, id uuid.UUID) ([]uuid.UUID, error) {
+	return s.extRepo.GetBacnetObjectIDs(ctx, id)
+}
+
+func (s *ObjectDataService) GetApparatIDs(ctx context.Context, id uuid.UUID) ([]uuid.UUID, error) {
+	objectData, err := s.GetByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return extractIDs(objectData.Apparats, func(a *domainFacility.Apparat) uuid.UUID { return a.ID }), nil
+}
+
+func (s *ObjectDataService) ExistsByDescription(ctx context.Context, projectID *uuid.UUID, description string, excludeID *uuid.UUID) (bool, error) {
+	return s.extRepo.ExistsByDescription(ctx, projectID, description, excludeID)
+}

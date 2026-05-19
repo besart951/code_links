@@ -1,0 +1,49 @@
+package facilitysql
+
+import (
+	"context"
+	"strings"
+
+	"github.com/besart951/go_infra_link/backend/internal/domain"
+	domainFacility "github.com/besart951/go_infra_link/backend/internal/domain/facility"
+	"github.com/besart951/go_infra_link/backend/internal/repository/gormbase"
+	"github.com/besart951/go_infra_link/backend/internal/repository/searchspec"
+	"github.com/google/uuid"
+	"gorm.io/gorm"
+)
+
+type buildingRepo struct {
+	*gormbase.BaseRepository[*domainFacility.Building]
+	db *gorm.DB
+}
+
+func NewBuildingRepository(db *gorm.DB) domainFacility.BuildingRepository {
+	baseRepo := gormbase.NewBaseRepository(db,
+		gormbase.TrigramSearchCallback[*domainFacility.Building](searchspec.Buildings.SearchColumns("")...),
+	)
+	return &buildingRepo{BaseRepository: baseRepo, db: db}
+}
+
+func (r *buildingRepo) GetPaginatedList(ctx context.Context, params domain.PaginationParams) (*domain.PaginatedList[domainFacility.Building], error) {
+	result, err := r.BaseRepository.GetPaginatedList(ctx, params, 10)
+	if err != nil {
+		return nil, err
+	}
+	return gormbase.DerefPaginatedList(result), nil
+}
+
+func (r *buildingRepo) ExistsIWSCodeGroup(ctx context.Context, iwsCode string, buildingGroup int, excludeID *uuid.UUID) (bool, error) {
+	query := r.db.WithContext(ctx).Model(&domainFacility.Building{}).
+		Where("LOWER(iws_code) = ?", strings.ToLower(strings.TrimSpace(iwsCode))).
+		Where("building_group = ?", buildingGroup)
+
+	if excludeID != nil {
+		query = query.Where("id <> ?", *excludeID)
+	}
+
+	var count int64
+	if err := query.Count(&count).Error; err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}

@@ -1,0 +1,88 @@
+<script lang="ts">
+  import { onDestroy } from 'svelte';
+  import Dropzone from './Dropzone.svelte';
+  import WorksheetSelector from './WorksheetSelector.svelte';
+  import DataGrid from './DataGrid.svelte';
+  import FieldDeviceImportPanel from './FieldDeviceImportPanel.svelte';
+  import { WorkbookService } from './WorkbookService.svelte.js';
+  import { FieldDeviceImportService } from './FieldDeviceImportService.svelte.js';
+  import { SheetJsWorkbookParser } from '$lib/infrastructure/excel/sheetJsWorkbookParser.js';
+  import { addToast } from '$lib/components/toast.svelte';
+  import { createTranslator } from '$lib/i18n/translator.js';
+
+  const t = createTranslator();
+  const workbookService = new WorkbookService(new SheetJsWorkbookParser(), {
+    visibleRowLimit: 500
+  });
+  const fieldDeviceImportService = new FieldDeviceImportService();
+  let lastImportSelectionKey = $state('');
+
+  onDestroy(() => {
+    fieldDeviceImportService.dispose();
+  });
+
+  $effect(() => {
+    const nextKey = `${workbookService.workbook?.fileName ?? ''}|${workbookService.selectedWorksheetName}`;
+    if (nextKey === lastImportSelectionKey) return;
+    lastImportSelectionKey = nextKey;
+    fieldDeviceImportService.clearTransform();
+  });
+
+  async function handleFileSelected(file: File): Promise<void> {
+    await workbookService.loadFile(file);
+
+    if (workbookService.errorMessage) {
+      addToast(workbookService.errorMessage, 'error');
+      return;
+    }
+
+    if (workbookService.workbook) {
+      addToast($t('excel.worksheet_preview.toasts.workbook_loaded'), 'success');
+    }
+  }
+</script>
+
+<div class="flex flex-col gap-4">
+  <Dropzone
+    disabled={workbookService.isLoading}
+    fileName={workbookService.workbook?.fileName ?? null}
+    onFileSelected={handleFileSelected}
+  />
+
+  {#if workbookService.errorMessage}
+    <div
+      class="rounded-lg border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive"
+    >
+      {workbookService.errorMessage}
+    </div>
+  {/if}
+
+  {#if workbookService.isLoading}
+    <div class="rounded-lg border bg-muted/20 p-4 text-sm text-muted-foreground">
+      {$t('excel.worksheet_preview.loading_workbook')}
+    </div>
+  {/if}
+
+  {#if workbookService.workbook}
+    <WorksheetSelector
+      worksheets={workbookService.sheetNames}
+      selectedWorksheetName={workbookService.selectedWorksheetName}
+      disabled={workbookService.isLoading}
+      onSelect={(name) => workbookService.selectWorksheet(name)}
+    />
+  {/if}
+
+  <FieldDeviceImportPanel
+    worksheet={workbookService.selectedWorksheet}
+    service={fieldDeviceImportService}
+  />
+
+  <DataGrid
+    worksheet={workbookService.selectedWorksheet}
+    rows={workbookService.displayRows}
+    columnLabels={workbookService.columnLabels}
+    isTruncated={workbookService.isPreviewTruncated}
+    visibleRowLimit={workbookService.visibleRowLimit}
+    cellMarkers={fieldDeviceImportService.cellMarkers}
+  />
+</div>

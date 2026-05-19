@@ -1,0 +1,264 @@
+<script lang="ts">
+  import { goto } from '$app/navigation';
+  import { Badge } from '$lib/components/ui/badge/index.js';
+  import { Button } from '$lib/components/ui/button/index.js';
+  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+  import * as Table from '$lib/components/ui/table/index.js';
+  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import PaginatedList from '$lib/components/list/PaginatedList.svelte';
+  import SPSControllerForm from '$lib/components/facility/forms/SPSControllerForm.svelte';
+  import ProjectMultiSelectFilter from '$lib/components/facility/shared/ProjectMultiSelectFilter.svelte';
+  import HistoryTimelineDialog from '$lib/components/history/HistoryTimelineDialog.svelte';
+  import type { SPSController } from '$lib/domain/facility/index.js';
+  import { createTranslator } from '$lib/i18n/translator.js';
+  import { Plus } from '@lucide/svelte';
+  import EllipsisIcon from '@lucide/svelte/icons/ellipsis';
+  import { useSPSControllerState } from './state/context.svelte.js';
+
+  const t = createTranslator();
+  const listState = useSPSControllerState();
+  let historyController = $state<SPSController | null>(null);
+  let historyOpen = $state(false);
+
+  const columns = $derived.by(() => [
+    { key: 'device_name', label: $t('facility.device_name') },
+    { key: 'ga_device', label: $t('facility.ga_device') },
+    { key: 'ip_address', label: $t('facility.ip_address') },
+    { key: 'subnet', label: $t('facility.subnet') },
+    { key: 'gateway', label: $t('facility.gateway') },
+    { key: 'vlan', label: $t('facility.vlan') },
+    { key: 'system_types', label: $t('facility.system_types') },
+    { key: 'actions', label: '', width: 'w-[40px]' }
+  ]);
+
+  const searchPlaceholder = $derived.by(() =>
+    listState.isProjectContext
+      ? $t('projects.sps_controllers.search_placeholder')
+      : $t('facility.search_sps_controllers')
+  );
+
+  const emptyMessage = $derived.by(() =>
+    listState.isProjectContext
+      ? $t('projects.sps_controllers.empty')
+      : $t('facility.no_sps_controllers_found')
+  );
+
+  const newLabel = $derived.by(() =>
+    listState.isProjectContext
+      ? $t('projects.sps_controllers.new')
+      : $t('facility.new_sps_controller')
+  );
+
+  const selectedControlCabinetFilterCount = $derived(
+    listState.selectedControlCabinetFilterIds.length
+  );
+
+  async function handleHistoryRestored(): Promise<void> {
+    await listState.reload();
+    listState.notifyHistoryRestored();
+  }
+
+  function optionalCodeValue(value: string | null | undefined): string | null {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  }
+</script>
+
+<div class="flex flex-col gap-4">
+  {#if historyController}
+    <HistoryTimelineDialog
+      bind:open={historyOpen}
+      title={`${$t('history.title')}: ${historyController.device_name ?? historyController.id}`}
+      scopeType="sps_controller"
+      scopeId={historyController.id}
+      projectId={listState.projectId}
+      onRestored={handleHistoryRestored}
+    />
+  {/if}
+
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    {#if listState.isProjectContext && (listState.cabinetFilterOptions.length > 0 || selectedControlCabinetFilterCount > 0)}
+      <ProjectMultiSelectFilter
+        items={listState.cabinetFilterOptions}
+        value={listState.selectedControlCabinetFilterIds}
+        label={$t('projects.sps_controllers.filters.control_cabinet')}
+        placeholder={$t('projects.sps_controllers.filters.all_control_cabinets')}
+        searchPlaceholder={$t('projects.sps_controllers.filters.search_control_cabinets')}
+        emptyText={$t('projects.sps_controllers.filters.no_control_cabinets')}
+        selectedText={$t('projects.sps_controllers.filters.control_cabinets_selected', {
+          count: selectedControlCabinetFilterCount
+        })}
+        clearText={$t('projects.sps_controllers.filters.clear')}
+        onValueChange={(ids) => void listState.setControlCabinetFilterIds(ids)}
+      />
+    {/if}
+
+    {#if !listState.showForm && listState.canCreateSPSController()}
+      <div class="ml-auto">
+        <Button onclick={() => listState.openCreateForm()}>
+          <Plus class="mr-2 size-4" />
+          {newLabel}
+        </Button>
+      </div>
+    {/if}
+  </div>
+
+  {#if listState.showForm}
+    <SPSControllerForm
+      initialData={listState.editingItem}
+      projectId={listState.projectId}
+      controlCabinetRefreshKey={listState.controlCabinetRefreshKey}
+      onSuccess={(controller) => void listState.handleFormSuccess(controller)}
+      onCancel={() => listState.cancelForm()}
+    />
+  {/if}
+
+  <Tooltip.Provider>
+    <PaginatedList
+      state={listState}
+      {columns}
+      {searchPlaceholder}
+      {emptyMessage}
+      onSearch={(text) => void listState.search(text)}
+      onPageChange={(page) => void listState.goToPage(page)}
+      onReload={() => void listState.reload()}
+    >
+      {#snippet rowSnippet(controller: SPSController)}
+        {@const systemTypes = listState.getSystemTypes(controller.id)}
+        <Table.Cell class="font-medium">
+          <a href="/facility/sps-controllers/{controller.id}" class="hover:underline">
+            {controller.device_name}
+          </a>
+        </Table.Cell>
+
+        <Table.Cell>{controller.ga_device ?? '-'}</Table.Cell>
+        <Table.Cell>
+          {#if optionalCodeValue(controller.ip_address)}
+            <code class="rounded-md bg-muted px-1.5 py-0.5 text-sm">
+              {optionalCodeValue(controller.ip_address)}
+            </code>
+          {:else}
+            -
+          {/if}
+        </Table.Cell>
+        <Table.Cell>
+          {#if optionalCodeValue(controller.subnet)}
+            <code class="rounded-md bg-muted px-1.5 py-0.5 text-sm">
+              {optionalCodeValue(controller.subnet)}
+            </code>
+          {:else}
+            -
+          {/if}
+        </Table.Cell>
+        <Table.Cell>
+          {#if optionalCodeValue(controller.gateway)}
+            <code class="rounded-md bg-muted px-1.5 py-0.5 text-sm">
+              {optionalCodeValue(controller.gateway)}
+            </code>
+          {:else}
+            -
+          {/if}
+        </Table.Cell>
+        <Table.Cell>{optionalCodeValue(controller.vlan) ?? '-'}</Table.Cell>
+        <Table.Cell>
+          {#if !listState.hasLoadedSystemTypes(controller.id)}
+            <Badge variant="outline">...</Badge>
+          {:else if systemTypes.length === 0}
+            <Badge variant="outline">0</Badge>
+          {:else}
+            <Tooltip.Root>
+              <Tooltip.Trigger class="inline-flex">
+                <Badge variant="secondary" class="cursor-help">
+                  {systemTypes.length}
+                </Badge>
+              </Tooltip.Trigger>
+              <Tooltip.Content class="max-h-80 max-w-sm overflow-y-auto">
+                <div class="space-y-3">
+                  <div>
+                    <p class="font-medium">{controller.device_name}</p>
+                    <p class="text-xs text-muted-foreground">
+                      {systemTypes.length}
+                      {$t('facility.system_types')}
+                    </p>
+                  </div>
+                  <div class="space-y-2">
+                    {#each systemTypes as systemType (systemType.id)}
+                      <div class="rounded-md border border-border/60 bg-muted/20 px-3 py-2 text-sm">
+                        <p class="font-medium text-foreground">
+                          {listState.formatSystemTypeTitle(systemType)}
+                        </p>
+                        {#if listState.formatSystemTypeMeta(systemType)}
+                          <p class="text-xs text-muted-foreground">
+                            {listState.formatSystemTypeMeta(systemType)}
+                          </p>
+                        {/if}
+                      </div>
+                    {/each}
+                  </div>
+                </div>
+              </Tooltip.Content>
+            </Tooltip.Root>
+          {/if}
+        </Table.Cell>
+
+        <Table.Cell class="text-right">
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+              {#snippet child({ props })}
+                <Button variant="ghost" size="icon" {...props}>
+                  <EllipsisIcon class="size-4" />
+                </Button>
+              {/snippet}
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content align="end" class="w-44">
+              {#if !listState.isProjectContext}
+                <DropdownMenu.Item
+                  onclick={() =>
+                    void listState.copyToClipboard(controller.device_name ?? controller.id)}
+                >
+                  {$t('facility.copy')}
+                </DropdownMenu.Item>
+              {/if}
+              {#if listState.canCreateSPSController()}
+                <DropdownMenu.Item
+                  onclick={() => void listState.duplicateSPSController(controller)}
+                >
+                  {$t('facility.duplicate')}
+                </DropdownMenu.Item>
+              {/if}
+              {#if listState.canReadSPSController()}
+                <DropdownMenu.Item
+                  onclick={() => goto(`/facility/sps-controllers/${controller.id}`)}
+                >
+                  {$t('common.view')}
+                </DropdownMenu.Item>
+              {/if}
+              <DropdownMenu.Item
+                onclick={() => {
+                  historyController = controller;
+                  historyOpen = true;
+                }}
+              >
+                {$t('history.open')}
+              </DropdownMenu.Item>
+              {#if listState.canUpdateSPSController()}
+                <DropdownMenu.Item onclick={() => listState.editSPSController(controller)}>
+                  {$t('common.edit')}
+                </DropdownMenu.Item>
+              {/if}
+              {#if listState.canDeleteSPSController()}
+                <DropdownMenu.Separator />
+                <DropdownMenu.Item
+                  variant="destructive"
+                  onclick={() => void listState.deleteSPSController(controller)}
+                >
+                  {$t('common.delete')}
+                </DropdownMenu.Item>
+              {/if}
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
+        </Table.Cell>
+      {/snippet}
+    </PaginatedList>
+  </Tooltip.Provider>
+</div>

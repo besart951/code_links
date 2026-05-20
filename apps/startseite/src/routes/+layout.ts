@@ -1,4 +1,9 @@
-import { canonicalPathFromLocalizedPath, localeFromPath, parseLocale } from '$lib/site';
+import {
+  canonicalPathFromLocalizedPath,
+  getProducts,
+  localeFromPath,
+  parseLocale
+} from '$lib/site';
 import type { LayoutLoad } from './$types';
 
 export const ssr = true;
@@ -9,6 +14,7 @@ export const load: LayoutLoad = ({ params, url }) => {
 
   return {
     locale,
-    pathname: canonicalPathFromLocalizedPath(url.pathname)
+    pathname: canonicalPathFromLocalizedPath(url.pathname),
+    products: getProducts(locale)
   };
 };

@@ -1,4 +1,4 @@
-import { getProducts, getSiteCopy, locales, parseLocale } from '$lib/site';
+import { getPricingPlans, getProducts, getSiteCopy, locales, parseLocale } from '$lib/site';
 import type { PageLoad } from './$types';
 
 export const prerender = true;
@@ -13,6 +13,7 @@ export const load: PageLoad = ({ params }) => {
   return {
     locale,
     siteCopy: getSiteCopy(locale),
+    pricingPlans: getPricingPlans(locale),
     products: getProducts(locale)
   };
 };

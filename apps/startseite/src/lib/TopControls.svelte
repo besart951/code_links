@@ -11,26 +11,23 @@
 
   type Theme = 'light' | 'dark';
 
-  let { locale, path }: { locale: Locale; path: string } = $props();
-  let theme = $state<Theme>('light');
-  let initialized = false;
-
-  const text = $derived(getSiteCopy(locale));
-
-  $effect(() => {
-    if (!browser || initialized) {
-      return;
+  function getInitialTheme(): Theme {
+    if (!browser) {
+      return 'light';
     }
 
     const stored = window.localStorage.getItem('codelinks-theme');
     if (stored === 'light' || stored === 'dark') {
-      theme = stored;
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      theme = 'dark';
+      return stored;
     }
 
-    initialized = true;
-  });
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  }
+
+  let { locale, path }: { locale: Locale; path: string } = $props();
+  let theme = $state<Theme>(getInitialTheme());
+
+  const text = $derived(getSiteCopy(locale));
 
   $effect(() => {
     if (!browser) {
@@ -44,7 +41,7 @@
 
 <nav class="top-controls" aria-label={text.controlsLabel}>
   <div class="language" aria-label={text.languageLabel}>
-    {#each locales as target}
+    {#each locales as target (target)}
       <a
         href={localizedHref(path, target)}
         aria-label={localeNames[target]}
@@ -81,9 +78,10 @@
     position: fixed;
     z-index: 20;
     top: 16px;
-    right: 16px;
+    left: 16px;
+    right: auto;
     display: flex;
-    max-width: calc(100vw - 32px);
+    width: calc(100vw - 32px);
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 8px;
@@ -93,6 +91,7 @@
   .language,
   .theme {
     display: inline-flex;
+    flex: 0 1 auto;
     overflow: hidden;
     border: 1px solid var(--control-border);
     border-radius: 8px;
@@ -135,8 +134,8 @@
   @media (max-width: 560px) {
     .top-controls {
       top: 10px;
-      right: 10px;
-      max-width: calc(100vw - 20px);
+      left: 10px;
+      width: calc(100vw - 20px);
     }
 
     a,

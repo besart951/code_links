@@ -39,6 +39,21 @@ export type SiteCopy = {
   signIn: string;
   viewProducts: string;
   productsLabel: string;
+  productSelectionEyebrow: string;
+  productSelectionTitle: string;
+  productSelectionDescription: string;
+  selectedProductLabel: string;
+  pricingEyebrow: string;
+  pricingTitle: string;
+  pricingDescription: string;
+  includedLabel: string;
+  priceFromLabel: string;
+  pricePerMonthLabel: string;
+  footerTagline: string;
+  footerProductsTitle: string;
+  footerPlatformTitle: string;
+  footerLegalTitle: string;
+  footerContact: string;
   homeLabel: string;
   openProduct: string;
   plannedAction: string;
@@ -59,6 +74,24 @@ export const copy: Record<Locale, SiteCopy> = {
     signIn: 'Anmelden',
     viewProducts: 'Produkte ansehen',
     productsLabel: 'Produkte',
+    productSelectionEyebrow: 'Produktauswahl',
+    productSelectionTitle: 'Wähle den passenden Einstieg in die CodeLinks Suite.',
+    productSelectionDescription:
+      'Jedes Produkt bleibt fokussiert, nutzt aber dieselbe Platform für Login, Mandanten und Abos.',
+    selectedProductLabel: 'Ausgewähltes Produkt',
+    pricingEyebrow: 'Preisübersicht',
+    pricingTitle: 'Startklar für einzelne Teams, erweiterbar für mehrere Produkte.',
+    pricingDescription:
+      'Die Preise zeigen typische Einstiegspunkte. Grössere Mandanten und Produktbündel werden über die Platform freigeschaltet.',
+    includedLabel: 'Enthalten',
+    priceFromLabel: 'ab',
+    pricePerMonthLabel: 'pro Monat',
+    footerTagline:
+      'CodeLinks bündelt Fachprodukte mit gemeinsamer Identität, Mandantensteuerung und Entitlements.',
+    footerProductsTitle: 'Produkte',
+    footerPlatformTitle: 'Platform',
+    footerLegalTitle: 'Rechtliches',
+    footerContact: 'Kontakt',
     homeLabel: 'CodeLinks Startseite',
     openProduct: 'Produkt öffnen',
     plannedAction: 'Vormerken',
@@ -77,6 +110,24 @@ export const copy: Record<Locale, SiteCopy> = {
     signIn: 'Sign in',
     viewProducts: 'View products',
     productsLabel: 'Products',
+    productSelectionEyebrow: 'Product selection',
+    productSelectionTitle: 'Choose the right entry point into the CodeLinks suite.',
+    productSelectionDescription:
+      'Each Product stays focused while sharing the same Platform for login, Tenants and subscriptions.',
+    selectedProductLabel: 'Selected Product',
+    pricingEyebrow: 'Price overview',
+    pricingTitle: 'Ready for individual teams, expandable across Products.',
+    pricingDescription:
+      'Prices show typical starting points. Larger Tenants and bundles are unlocked through the Platform.',
+    includedLabel: 'Included',
+    priceFromLabel: 'from',
+    pricePerMonthLabel: 'per month',
+    footerTagline:
+      'CodeLinks combines specialist Products with shared identity, Tenant control and Entitlements.',
+    footerProductsTitle: 'Products',
+    footerPlatformTitle: 'Platform',
+    footerLegalTitle: 'Legal',
+    footerContact: 'Contact',
     homeLabel: 'CodeLinks home',
     openProduct: 'Open product',
     plannedAction: 'Follow launch',
@@ -95,6 +146,24 @@ export const copy: Record<Locale, SiteCopy> = {
     signIn: 'Se connecter',
     viewProducts: 'Voir les produits',
     productsLabel: 'Produits',
+    productSelectionEyebrow: 'Sélection de produits',
+    productSelectionTitle: "Choisissez le bon point d'entrée dans la suite CodeLinks.",
+    productSelectionDescription:
+      'Chaque produit reste ciblé tout en partageant la même Platform pour la connexion, les mandants et les abonnements.',
+    selectedProductLabel: 'Produit sélectionné',
+    pricingEyebrow: 'Aperçu des prix',
+    pricingTitle: 'Prêt pour les équipes individuelles, extensible à plusieurs produits.',
+    pricingDescription:
+      'Les prix indiquent des points de départ typiques. Les grands mandants et bundles sont activés via la Platform.',
+    includedLabel: 'Inclus',
+    priceFromLabel: 'dès',
+    pricePerMonthLabel: 'par mois',
+    footerTagline:
+      'CodeLinks associe des produits spécialisés à une identité commune, une gestion des mandants et des Entitlements.',
+    footerProductsTitle: 'Produits',
+    footerPlatformTitle: 'Platform',
+    footerLegalTitle: 'Légal',
+    footerContact: 'Contact',
     homeLabel: 'Accueil CodeLinks',
     openProduct: 'Ouvrir le produit',
     plannedAction: 'Suivre le lancement',
@@ -113,6 +182,24 @@ export const copy: Record<Locale, SiteCopy> = {
     signIn: 'Accedi',
     viewProducts: 'Vedi prodotti',
     productsLabel: 'Prodotti',
+    productSelectionEyebrow: 'Selezione prodotto',
+    productSelectionTitle: "Scegli il punto d'ingresso giusto nella suite CodeLinks.",
+    productSelectionDescription:
+      'Ogni prodotto resta focalizzato, ma condivide la stessa Platform per login, tenant e abbonamenti.',
+    selectedProductLabel: 'Prodotto selezionato',
+    pricingEyebrow: 'Panoramica prezzi',
+    pricingTitle: 'Pronto per singoli team, estendibile a più prodotti.',
+    pricingDescription:
+      'I prezzi mostrano punti di partenza tipici. Tenant più grandi e bundle vengono attivati tramite la Platform.',
+    includedLabel: 'Incluso',
+    priceFromLabel: 'da',
+    pricePerMonthLabel: 'al mese',
+    footerTagline:
+      'CodeLinks combina prodotti specialistici con identità condivisa, gestione tenant ed Entitlements.',
+    footerProductsTitle: 'Prodotti',
+    footerPlatformTitle: 'Platform',
+    footerLegalTitle: 'Legale',
+    footerContact: 'Contatto',
     homeLabel: 'Home CodeLinks',
     openProduct: 'Apri prodotto',
     plannedAction: 'Segui il lancio',
@@ -131,6 +218,24 @@ export const copy: Record<Locale, SiteCopy> = {
     signIn: 'Iniciar sesión',
     viewProducts: 'Ver productos',
     productsLabel: 'Productos',
+    productSelectionEyebrow: 'Selección de productos',
+    productSelectionTitle: 'Elige el punto de entrada adecuado a la suite CodeLinks.',
+    productSelectionDescription:
+      'Cada producto mantiene su foco y comparte la misma Platform para inicio de sesión, tenants y suscripciones.',
+    selectedProductLabel: 'Producto seleccionado',
+    pricingEyebrow: 'Resumen de precios',
+    pricingTitle: 'Listo para equipos individuales, ampliable a varios productos.',
+    pricingDescription:
+      'Los precios muestran puntos de partida típicos. Tenants más grandes y bundles se activan mediante la Platform.',
+    includedLabel: 'Incluido',
+    priceFromLabel: 'desde',
+    pricePerMonthLabel: 'al mes',
+    footerTagline:
+      'CodeLinks combina productos especializados con identidad compartida, gestión de tenants y Entitlements.',
+    footerProductsTitle: 'Productos',
+    footerPlatformTitle: 'Platform',
+    footerLegalTitle: 'Legal',
+    footerContact: 'Contacto',
     homeLabel: 'Inicio de CodeLinks',
     openProduct: 'Abrir producto',
     plannedAction: 'Seguir lanzamiento',
@@ -159,6 +264,24 @@ export type ProductPage = {
 };
 
 export type LocalizedProductPage = Omit<ProductPage, 'content'> & ProductContent;
+
+export type PricePlanContent = {
+  name: string;
+  audience: string;
+  price: string;
+  summary: string;
+  features: string[];
+  cta: string;
+};
+
+export type PricePlan = {
+  id: string;
+  productSlug?: string;
+  highlighted?: boolean;
+  content: Record<Locale, PricePlanContent>;
+};
+
+export type LocalizedPricePlan = Omit<PricePlan, 'content'> & PricePlanContent;
 
 export const products: ProductPage[] = [
   {
@@ -292,6 +415,150 @@ export const products: ProductPage[] = [
   }
 ];
 
+export const pricingPlans: PricePlan[] = [
+  {
+    id: 'planer-starter',
+    productSlug: 'planer-link',
+    content: {
+      de: {
+        name: 'PlanerLink Starter',
+        audience: 'Für kleine Teams',
+        price: 'CHF 19',
+        summary: 'Planung, Exporte und synchronisierte Einsatzdaten für den täglichen Ablauf.',
+        features: ['1 Tenant', 'Dienstplanung', 'PDF- und Excel-Export', 'Basis-Support'],
+        cta: 'PlanerLink ansehen'
+      },
+      en: {
+        name: 'PlanerLink Starter',
+        audience: 'For small teams',
+        price: 'CHF 19',
+        summary: 'Planning, exports and synchronized assignment data for daily operations.',
+        features: ['1 Tenant', 'Duty planning', 'PDF and Excel export', 'Basic support'],
+        cta: 'View PlanerLink'
+      },
+      fr: {
+        name: 'PlanerLink Starter',
+        audience: 'Pour petites équipes',
+        price: 'CHF 19',
+        summary:
+          "Planification, exports et données d'intervention synchronisées pour le quotidien.",
+        features: ['1 mandant', 'Planification', 'Export PDF et Excel', 'Support de base'],
+        cta: 'Voir PlanerLink'
+      },
+      it: {
+        name: 'PlanerLink Starter',
+        audience: 'Per piccoli team',
+        price: 'CHF 19',
+        summary: 'Pianificazione, export e dati intervento sincronizzati per il lavoro quotidiano.',
+        features: ['1 tenant', 'Pianificazione turni', 'Export PDF ed Excel', 'Supporto base'],
+        cta: 'Vedi PlanerLink'
+      },
+      es: {
+        name: 'PlanerLink Starter',
+        audience: 'Para equipos pequeños',
+        price: 'CHF 19',
+        summary: 'Planificación, exportaciones y datos de servicio sincronizados para el día a día.',
+        features: ['1 tenant', 'Planificación de turnos', 'Exportación PDF y Excel', 'Soporte básico'],
+        cta: 'Ver PlanerLink'
+      }
+    }
+  },
+  {
+    id: 'infra-pro',
+    productSlug: 'infra-link',
+    highlighted: true,
+    content: {
+      de: {
+        name: 'InfraLink Pro',
+        audience: 'Für technische Betreiber',
+        price: 'CHF 49',
+        summary: 'Strukturierte Gebäudeautomation mit Berechtigungen, Katalogen und Projektdaten.',
+        features: ['BACnet-Katalog', 'SPS- und Feldgeräte', 'Projektrollen', 'FeatureAccess-Steuerung'],
+        cta: 'InfraLink ansehen'
+      },
+      en: {
+        name: 'InfraLink Pro',
+        audience: 'For technical operators',
+        price: 'CHF 49',
+        summary: 'Structured building automation with permissions, catalogs and project data.',
+        features: ['BACnet catalog', 'PLCs and field devices', 'Project roles', 'FeatureAccess control'],
+        cta: 'View InfraLink'
+      },
+      fr: {
+        name: 'InfraLink Pro',
+        audience: 'Pour exploitants techniques',
+        price: 'CHF 49',
+        summary:
+          'Automatisation du bâtiment structurée avec droits, catalogues et données de projet.',
+        features: ['Catalogue BACnet', 'Automates et terrain', 'Rôles projet', 'Gestion FeatureAccess'],
+        cta: 'Voir InfraLink'
+      },
+      it: {
+        name: 'InfraLink Pro',
+        audience: 'Per gestori tecnici',
+        price: 'CHF 49',
+        summary: 'Automazione edifici strutturata con permessi, cataloghi e dati progetto.',
+        features: ['Catalogo BACnet', 'PLC e campo', 'Ruoli progetto', 'Controllo FeatureAccess'],
+        cta: 'Vedi InfraLink'
+      },
+      es: {
+        name: 'InfraLink Pro',
+        audience: 'Para operadores técnicos',
+        price: 'CHF 49',
+        summary: 'Automatización de edificios estructurada con permisos, catálogos y datos de proyecto.',
+        features: ['Catálogo BACnet', 'PLC y campo', 'Roles de proyecto', 'Control FeatureAccess'],
+        cta: 'Ver InfraLink'
+      }
+    }
+  },
+  {
+    id: 'platform-bundle',
+    content: {
+      de: {
+        name: 'CodeLinks Bundle',
+        audience: 'Für mehrere Produkte',
+        price: 'Individuell',
+        summary: 'Gemeinsame Platform, Produktzugriff, Entitlements und Planlogik für Mandanten.',
+        features: ['Mehrere Products', 'ProductAccess', 'Entitlements', 'Individuelle FeatureLimits'],
+        cta: 'Kontakt aufnehmen'
+      },
+      en: {
+        name: 'CodeLinks Bundle',
+        audience: 'For multiple Products',
+        price: 'Custom',
+        summary: 'Shared Platform, ProductAccess, Entitlements and Plan logic for Tenants.',
+        features: ['Multiple Products', 'ProductAccess', 'Entitlements', 'Custom FeatureLimits'],
+        cta: 'Contact us'
+      },
+      fr: {
+        name: 'Bundle CodeLinks',
+        audience: 'Pour plusieurs produits',
+        price: 'Sur mesure',
+        summary:
+          'Platform commune, ProductAccess, Entitlements et logique de Plans pour les mandants.',
+        features: ['Plusieurs produits', 'ProductAccess', 'Entitlements', 'FeatureLimits sur mesure'],
+        cta: 'Nous contacter'
+      },
+      it: {
+        name: 'Bundle CodeLinks',
+        audience: 'Per più prodotti',
+        price: 'Su misura',
+        summary: 'Platform condivisa, ProductAccess, Entitlements e logica Plan per i tenant.',
+        features: ['Più prodotti', 'ProductAccess', 'Entitlements', 'FeatureLimits su misura'],
+        cta: 'Contattaci'
+      },
+      es: {
+        name: 'Bundle CodeLinks',
+        audience: 'Para varios productos',
+        price: 'Personalizado',
+        summary: 'Platform compartida, ProductAccess, Entitlements y lógica de Plan para tenants.',
+        features: ['Varios productos', 'ProductAccess', 'Entitlements', 'FeatureLimits personalizados'],
+        cta: 'Contactar'
+      }
+    }
+  }
+];
+
 export function parseLocale(value: string | null | undefined): Locale {
   if (value && locales.includes(value as Locale)) {
     return value as Locale;
@@ -310,6 +577,10 @@ export function getSiteCopy(locale: Locale): SiteCopy {
 
 export function getProducts(locale: Locale): LocalizedProductPage[] {
   return products.map((product) => localizeProduct(product, locale));
+}
+
+export function getPricingPlans(locale: Locale): LocalizedPricePlan[] {
+  return pricingPlans.map((plan) => localizePricePlan(plan, locale));
 }
 
 export function getProductBySlug(slug: string, locale: Locale): LocalizedProductPage | undefined {
@@ -361,13 +632,16 @@ export function canonicalContentPaths(): string[] {
   return ['/', ...products.map((product) => `/produkte/${product.slug}`)];
 }
 
-export function jsonLd(value: unknown): string {
-  const json = JSON.stringify(value).replace(/</g, '\\u003c');
-  return `<script type="application/ld+json">${json}</script>`;
-}
-
 function localizeProduct(product: ProductPage, locale: Locale): LocalizedProductPage {
   const { content, ...base } = product;
+  return {
+    ...base,
+    ...content[locale]
+  };
+}
+
+function localizePricePlan(plan: PricePlan, locale: Locale): LocalizedPricePlan {
+  const { content, ...base } = plan;
   return {
     ...base,
     ...content[locale]

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Card from '@codelinks/ui/card';
   import ListPlusIcon from '@lucide/svelte/icons/list-plus';
   import { useUnsavedChangesWarning } from '$lib/hooks/useUnsavedChangesWarning.svelte.js';
   import { createTranslator } from '$lib/i18n/translator.js';

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { Skeleton } from '$lib/components/ui/skeleton/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Table from '@codelinks/ui/table';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import { Skeleton } from '@codelinks/ui/skeleton';
   import { ArrowDown, ArrowUp, ChevronDown, ChevronRight, Settings2 } from '@lucide/svelte';
   import { keyboardTableNavigation } from '$lib/actions/keyboardTableNavigation.js';
   import BacnetObjectsEditor from '../bacnet/BacnetObjectsEditor.svelte';

@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
+  import { Textarea } from '@codelinks/ui/textarea';
   import { ManageEntityUseCase } from '$lib/application/useCases/manageEntityUseCase.js';
   import { notificationClassRepository } from '$lib/infrastructure/api/notificationClassRepository.js';
   const manageNotificationClass = new ManageEntityUseCase(notificationClassRepository);

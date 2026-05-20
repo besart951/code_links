@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Calendar } from '$lib/components/ui/calendar/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import * as Popover from '$lib/components/ui/popover/index.js';
+  import { Calendar } from '@codelinks/ui/calendar';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
+  import * as Popover from '@codelinks/ui/popover';
   import { cn } from '$lib/utils.js';
   import { getLocalTimeZone, parseDate, type DateValue } from '@internationalized/date';
   import ChevronDownIcon from '@lucide/svelte/icons/chevron-down';

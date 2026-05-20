@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import { navigateBack } from '$lib/navigation/backNavigation.js';
   import type { Snippet } from 'svelte';
   import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';

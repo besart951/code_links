@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Input } from '@codelinks/ui/input';
+  import * as Card from '@codelinks/ui/card';
+  import * as Table from '@codelinks/ui/table';
   import { createTranslator } from '$lib/i18n/translator.js';
   import SearchIcon from '@lucide/svelte/icons/search';
   import { useSPSControllerDetailState } from './state/context.svelte.js';

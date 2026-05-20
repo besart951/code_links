@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Button } from '@codelinks/ui/button';
   import { AlertTriangle } from '@lucide/svelte';
   import { confirmDialogState } from '$lib/stores/confirm-dialog.js';
   import { createTranslator } from '$lib/i18n/translator.js';

@@ -1,9 +1,9 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Textarea } from '@codelinks/ui/textarea';
   import { TeamListPageState } from '$lib/components/teams/TeamListPageState.svelte.js';
   import { createTranslator } from '$lib/i18n/translator.js';
 

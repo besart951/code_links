@@ -14,16 +14,16 @@
     UserPlus,
   } from "@lucide/svelte";
   import { onMount, tick } from "svelte";
-  import { Badge } from "$lib/components/ui/badge/index.js";
-  import { Button } from "$lib/components/ui/button/index.js";
+  import { Badge } from "@codelinks/ui/badge";
+  import { Button } from "@codelinks/ui/button";
   import {
     Card,
     CardContent,
     CardDescription,
     CardHeader,
     CardTitle,
-  } from "$lib/components/ui/card/index.js";
-  import { Input } from "$lib/components/ui/input/index.js";
+  } from "@codelinks/ui/card";
+  import { Input } from "@codelinks/ui/input";
   import {
     apiBaseUrl,
     apiUrl,

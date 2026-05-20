@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { goto } from '$app/navigation';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Dialog from '$lib/components/ui/dialog/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Dialog from '@codelinks/ui/dialog';
+  import { Input } from '@codelinks/ui/input';
+  import * as Table from '@codelinks/ui/table';
+  import { Badge } from '@codelinks/ui/badge';
   import ConfirmDialog from '$lib/components/confirm-dialog.svelte';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
   import { Trash2 } from '@lucide/svelte';

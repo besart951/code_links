@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { buttonVariants } from '$lib/components/ui/button/index.js';
-  import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import { buttonVariants } from '@codelinks/ui/button';
+  import * as ButtonGroup from '@codelinks/ui/button-group';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import { createTranslator } from '$lib/i18n/translator.js';
   import CheckIcon from '@lucide/svelte/icons/check';
   import MailIcon from '@lucide/svelte/icons/mail';

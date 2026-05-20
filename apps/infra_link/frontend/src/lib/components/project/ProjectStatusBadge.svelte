@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge } from '$lib/components/ui/badge/index.js';
+  import { Badge } from '@codelinks/ui/badge';
   import { cn } from '$lib/utils.js';
   import type { ProjectStatus } from '$lib/domain/project/index.js';
 

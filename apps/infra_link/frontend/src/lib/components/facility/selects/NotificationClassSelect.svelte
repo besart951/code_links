@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AsyncCombobox from '$lib/components/ui/combobox/AsyncCombobox.svelte';
+  import { AsyncCombobox } from '@codelinks/ui/combobox';
   import type { NotificationClass } from '$lib/domain/facility/index.js';
   import { createCachedFetchById } from '$lib/infrastructure/api/createCachedFetchById.js';
   import { notificationClassRepository } from '$lib/infrastructure/api/notificationClassRepository.js';

@@ -8,10 +8,10 @@
     EditableSelectCell,
     EditableBooleanCell,
     InlineUndoButton
-  } from '$lib/components/ui/editable-cell/index.js';
-  import AsyncCombobox from '$lib/components/ui/combobox/AsyncCombobox.svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Popover from '$lib/components/ui/popover/index.js';
+  } from '@codelinks/ui/editable-cell';
+  import { AsyncCombobox } from '@codelinks/ui/combobox';
+  import { Button } from '@codelinks/ui/button';
+  import * as Popover from '@codelinks/ui/popover';
   import { resizableTableColumns } from '$lib/actions/resizableTableColumns.js';
   import { keyboardTableCell } from '$lib/actions/keyboardTableNavigation.js';
   import BacnetAlarmValuesEditor from './BacnetAlarmValuesEditor.svelte';

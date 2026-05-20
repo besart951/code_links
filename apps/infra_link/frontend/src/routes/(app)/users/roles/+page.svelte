@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Skeleton } from '$lib/components/ui/skeleton/index.js';
-  import * as Tabs from '$lib/components/ui/tabs/index.js';
-  import * as Dialog from '$lib/components/ui/dialog/index.js';
-  import * as Sheet from '$lib/components/ui/sheet/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Skeleton } from '@codelinks/ui/skeleton';
+  import * as Tabs from '@codelinks/ui/tabs';
+  import * as Dialog from '@codelinks/ui/dialog';
+  import * as Sheet from '@codelinks/ui/sheet';
   import ConfirmDialog from '$lib/components/confirm-dialog.svelte';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
   import { createTranslator } from '$lib/i18n/translator.js';

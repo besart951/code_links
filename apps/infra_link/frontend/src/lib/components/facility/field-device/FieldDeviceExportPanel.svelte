@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
-  import AsyncMultiSelect from '$lib/components/ui/combobox/AsyncMultiSelect.svelte';
+  import { Button } from '@codelinks/ui/button';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import { Label } from '@codelinks/ui/label';
+  import * as Card from '@codelinks/ui/card';
+  import { AsyncMultiSelect } from '@codelinks/ui/combobox';
   import { addToast } from '$lib/components/toast.svelte';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { t as translate } from '$lib/i18n/index.js';

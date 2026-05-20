@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AsyncCombobox from '$lib/components/ui/combobox/AsyncCombobox.svelte';
+  import { AsyncCombobox } from '@codelinks/ui/combobox';
   import { getPhase, listPhases } from '$lib/infrastructure/api/phase.adapter.js';
   import type { Phase } from '$lib/domain/phase/index.js';
 

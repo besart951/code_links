@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AsyncCombobox from '$lib/components/ui/combobox/AsyncCombobox.svelte';
+  import { AsyncCombobox } from '@codelinks/ui/combobox';
   import { buildingRepository } from '$lib/infrastructure/api/buildingRepository.js';
   import { controlCabinetRepository } from '$lib/infrastructure/api/controlCabinetRepository.js';
   import { projectRepository } from '$lib/infrastructure/api/projectRepository.js';

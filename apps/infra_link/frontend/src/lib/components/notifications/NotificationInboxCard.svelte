@@ -1,6 +1,6 @@
 <script lang="ts">
   import NotificationActions from '$lib/components/notifications/NotificationActions.svelte';
-  import * as Card from '$lib/components/ui/card/index.js';
+  import * as Card from '@codelinks/ui/card';
   import type { SystemNotification } from '$lib/domain/notification/index.js';
   import { cn } from '$lib/utils.js';
   import StarIcon from '@lucide/svelte/icons/star';

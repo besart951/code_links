@@ -1,8 +1,8 @@
 <script lang="ts">
-  import * as Alert from '$lib/components/ui/alert/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
-  import { Skeleton } from '$lib/components/ui/skeleton/index.js';
+  import * as Alert from '@codelinks/ui/alert';
+  import { Badge } from '@codelinks/ui/badge';
+  import * as Card from '@codelinks/ui/card';
+  import { Skeleton } from '@codelinks/ui/skeleton';
   import type { SMTPSettings } from '$lib/domain/notification/index.js';
   import { createTranslator } from '$lib/i18n/translator.js';
 

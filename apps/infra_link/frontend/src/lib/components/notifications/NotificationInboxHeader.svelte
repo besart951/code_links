@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import { Button, buttonVariants } from '@codelinks/ui/button';
+  import { Badge } from '@codelinks/ui/badge';
+  import * as ButtonGroup from '@codelinks/ui/button-group';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import { navigateBack } from '$lib/navigation/backNavigation.js';
   import ArrowLeftIcon from '@lucide/svelte/icons/arrow-left';
   import BellIcon from '@lucide/svelte/icons/bell';

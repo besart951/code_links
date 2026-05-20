@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Command from '$lib/components/ui/command/index.js';
-  import * as Popover from '$lib/components/ui/popover/index.js';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Button } from '@codelinks/ui/button';
+  import * as Command from '@codelinks/ui/command';
+  import * as Popover from '@codelinks/ui/popover';
   import { cn } from '$lib/utils.js';
   import CheckIcon from '@lucide/svelte/icons/check';
   import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';

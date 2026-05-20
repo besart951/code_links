@@ -1,8 +1,8 @@
 <script lang="ts">
   import { Eye, EyeOff } from '@lucide/svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import * as InputGroup from '$lib/components/ui/input-group/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import * as InputGroup from '@codelinks/ui/input-group';
   import { goto, invalidateAll } from '$app/navigation';
   import { api } from '$lib/api/client';
   import {
@@ -11,7 +11,7 @@
     FieldLabel,
     FieldContent,
     FieldError
-  } from '$lib/components/ui/field/index.js';
+  } from '@codelinks/ui/field';
   import { dev } from '$app/environment';
   import { createTranslator } from '$lib/i18n/translator';
 

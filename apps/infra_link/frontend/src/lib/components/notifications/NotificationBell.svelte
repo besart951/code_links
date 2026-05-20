@@ -2,8 +2,8 @@
   import { goto } from '$app/navigation';
   import NotificationPreviewItem from '$lib/components/notifications/NotificationPreviewItem.svelte';
   import { systemNotificationState } from '$lib/components/notifications/SystemNotificationState.svelte.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Popover from '$lib/components/ui/popover/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Popover from '@codelinks/ui/popover';
   import { createTranslator } from '$lib/i18n/translator.js';
   import BellIcon from '@lucide/svelte/icons/bell';
   import CheckIcon from '@lucide/svelte/icons/check';

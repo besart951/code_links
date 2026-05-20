@@ -1,7 +1,7 @@
 <script lang="ts">
-  import * as Collapsible from '$lib/components/ui/collapsible/index.js';
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+  import * as Collapsible from '@codelinks/ui/collapsible';
+  import * as DropdownMenu from '@codelinks/ui/dropdown-menu';
+  import * as Sidebar from '@codelinks/ui/sidebar';
   import { cn } from '$lib/utils.js';
   import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
   import type { Component } from 'svelte';

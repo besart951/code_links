@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Button } from '@codelinks/ui/button';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { navigateBack } from '$lib/navigation/backNavigation.js';
   import { ArrowLeft, FileQuestion, Home, ShieldAlert, TriangleAlert } from '@lucide/svelte';

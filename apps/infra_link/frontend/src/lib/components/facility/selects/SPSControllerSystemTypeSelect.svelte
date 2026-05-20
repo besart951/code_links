@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AsyncCombobox from '$lib/components/ui/combobox/AsyncCombobox.svelte';
+  import { AsyncCombobox } from '@codelinks/ui/combobox';
   import { spsControllerSystemTypeRepository } from '$lib/infrastructure/api/spsControllerSystemTypeRepository.js';
   import type { SPSControllerSystemType } from '$lib/domain/facility/index.js';
   import { createTranslator } from '$lib/i18n/translator.js';

@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/besart951/code_links/platform/auth"
-	"github.com/besart951/code_links/platform/gateway"
+	"github.com/besart951/code_links/platform/internal/config"
+	"github.com/besart951/code_links/platform/internal/passwordbcrypt"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -20,7 +20,7 @@ func main() {
 		return
 	}
 
-	cfg := gateway.LoadConfig()
+	cfg := config.Load()
 	if cfg.DatabaseURL == "" {
 		log.Fatal("DATABASE_URL is required")
 	}
@@ -40,7 +40,7 @@ func main() {
 }
 
 func seed(ctx context.Context, db *pgxpool.Pool, email, password string) error {
-	passwordHash, err := auth.HashPassword(password)
+	passwordHash, err := passwordbcrypt.HashPassword(password)
 	if err != nil {
 		return err
 	}
@@ -82,6 +82,16 @@ func seed(ctx context.Context, db *pgxpool.Pool, email, password string) error {
 		return err
 	}
 
+	for _, permission := range seedAdminPermissions() {
+		if _, err := db.Exec(ctx, `
+			insert into platform_admin_permissions (user_id, permission_key, granted_by, revoked_at)
+			values ($1::uuid, $2, $1::uuid, null)
+			on conflict (user_id, permission_key) do update set revoked_at = null
+		`, userID, permission); err != nil {
+			return err
+		}
+	}
+
 	for _, feature := range seedEntitlements() {
 		parts := strings.SplitN(feature, ":", 2)
 		if len(parts) != 2 {
@@ -108,6 +118,11 @@ func seedEntitlements() []string {
 		"infra_link:infra.module_sps",
 		"infra_link:infra.module_field_devices",
 	}, ","))
+	return strings.Split(raw, ",")
+}
+
+func seedAdminPermissions() []string {
+	raw := env("SEED_ADMIN_PERMISSIONS", "platform.admin.read,platform.admin.write")
 	return strings.Split(raw, ",")
 }
 

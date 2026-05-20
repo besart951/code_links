@@ -1,7 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Table from '@codelinks/ui/table';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
   import PaginatedList from '$lib/components/list/PaginatedList.svelte';
   import ProjectCreateDialog from '$lib/components/project/ProjectCreateDialog.svelte';

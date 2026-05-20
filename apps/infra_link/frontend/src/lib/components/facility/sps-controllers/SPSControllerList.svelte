@@ -1,10 +1,10 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Button } from '@codelinks/ui/button';
+  import * as DropdownMenu from '@codelinks/ui/dropdown-menu';
+  import * as Table from '@codelinks/ui/table';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import PaginatedList from '$lib/components/list/PaginatedList.svelte';
   import SPSControllerForm from '$lib/components/facility/forms/SPSControllerForm.svelte';
   import ProjectMultiSelectFilter from '$lib/components/facility/shared/ProjectMultiSelectFilter.svelte';

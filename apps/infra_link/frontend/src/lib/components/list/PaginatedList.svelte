@@ -1,7 +1,7 @@
 <script lang="ts" generics="T">
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
+  import { Input } from '@codelinks/ui/input';
+  import { Button } from '@codelinks/ui/button';
+  import * as Table from '@codelinks/ui/table';
   import { Search, ChevronLeft, ChevronRight } from '@lucide/svelte';
   import type { Snippet } from 'svelte';
   import type { ListState } from '$lib/application/useCases/listUseCase.js';

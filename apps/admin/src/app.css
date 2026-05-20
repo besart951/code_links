@@ -1,0 +1,5 @@
+@import '@codelinks/ui/styles.css';
+
+body {
+	min-width: 320px;
+}

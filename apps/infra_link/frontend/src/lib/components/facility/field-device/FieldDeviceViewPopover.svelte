@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
-  import * as Popover from '$lib/components/ui/popover/index.js';
-  import { Separator } from '$lib/components/ui/separator/index.js';
-  import { ToggleButton } from '$lib/components/ui/toggle-button/index.js';
+  import { Button, buttonVariants } from '@codelinks/ui/button';
+  import * as Popover from '@codelinks/ui/popover';
+  import { Separator } from '@codelinks/ui/separator';
+  import { ToggleButton } from '@codelinks/ui/toggle-button';
   import SlidersHorizontal from '@lucide/svelte/icons/sliders-horizontal';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { useFieldDeviceState } from './state/context.svelte.js';

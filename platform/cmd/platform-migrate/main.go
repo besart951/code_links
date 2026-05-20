@@ -9,13 +9,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/besart951/code_links/platform/gateway"
+	"github.com/besart951/code_links/platform/internal/config"
 	"github.com/besart951/code_links/platform/migrations"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 func main() {
-	cfg := gateway.LoadConfig()
+	cfg := config.Load()
 	if cfg.DatabaseURL == "" {
 		log.Fatal("DATABASE_URL is required")
 	}

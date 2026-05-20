@@ -2,8 +2,8 @@
   import type { Role, Permission, PermissionCategory } from '$lib/domain/role/index.js';
   import { parsePermissionName } from '$lib/domain/role/index.js';
   import type { UserRole } from '$lib/domain/user/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
+  import * as Table from '@codelinks/ui/table';
+  import { Badge } from '@codelinks/ui/badge';
   import { Check, Minus } from '@lucide/svelte';
   import RoleBadge from '$lib/components/role-badge.svelte';
 

@@ -51,6 +51,7 @@
     "vitest": "^4.1.5"
   },
   "dependencies": {
+    "@codelinks/ui": "workspace:*",
     "@e965/xlsx": "^0.20.3",
     "zod": "^4.4.3"
   }

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Button } from '@codelinks/ui/button';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
   import HistoryTimelineDialog from '$lib/components/history/HistoryTimelineDialog.svelte';
   import HistoryIcon from '@lucide/svelte/icons/history';

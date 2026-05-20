@@ -19,6 +19,8 @@
     "build:infra-frontend": "pnpm --filter @codelinks/infra-link-frontend build",
     "dev:planer": "pnpm --filter @codelinks/planer-link dev",
     "build:planer": "pnpm --filter @codelinks/planer-link build",
+    "dev:admin": "pnpm --filter @codelinks/admin dev",
+    "build:admin": "pnpm --filter @codelinks/admin build",
     "docker:dev": "docker compose -f deploy/docker/docker-compose.dev.yml up --build",
     "docker:down": "docker compose -f deploy/docker/docker-compose.dev.yml down",
     "platform:dev": "go run ./platform/cmd/platform-api",

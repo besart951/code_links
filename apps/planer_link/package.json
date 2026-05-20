@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@codelinks/contracts": "workspace:*",
+    "@codelinks/ui": "workspace:*",
     "@tauri-apps/api": "^2.11.0",
     "drizzle-orm": "^0.45.2",
     "exceljs": "^4.4.0",

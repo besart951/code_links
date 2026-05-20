@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import StaticCombobox from '$lib/components/ui/combobox/StaticCombobox.svelte';
-  import * as Table from '$lib/components/ui/table/index.js';
-  import * as Popover from '$lib/components/ui/popover/index.js';
-  import * as Command from '$lib/components/ui/command/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { StaticCombobox } from '@codelinks/ui/combobox';
+  import * as Table from '@codelinks/ui/table';
+  import * as Popover from '@codelinks/ui/popover';
+  import * as Command from '@codelinks/ui/command';
   import ConfirmDialog from '$lib/components/confirm-dialog.svelte';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
   import UserAvatar from '$lib/components/user-avatar.svelte';

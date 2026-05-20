@@ -1,6 +1,6 @@
 <script lang="ts">
-  import * as Card from '$lib/components/ui/card/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
+  import * as Card from '@codelinks/ui/card';
+  import { Badge } from '@codelinks/ui/badge';
   import ProjectStatusBadge from '$lib/components/project/ProjectStatusBadge.svelte';
   import type { DashboardProject } from '$lib/domain/dashboard/index.js';
   import { createTranslator } from '$lib/i18n/translator.js';

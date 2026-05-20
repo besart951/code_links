@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Label } from '$lib/components/ui/label/index.js';
+  import { Label } from '@codelinks/ui/label';
   import ProjectPhaseSelect from '$lib/components/project/ProjectPhaseSelect.svelte';
   import type { ProjectStatusFilter } from '$lib/stores/projects/projectListStore.js';
 

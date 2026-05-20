@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
   import type { Building } from '$lib/domain/facility/index.js';
   import { ManageBuildingUseCase } from '$lib/application/useCases/facility/manageBuildingUseCase.js';
   import { buildingRepository } from '$lib/infrastructure/api/buildingRepository.js';

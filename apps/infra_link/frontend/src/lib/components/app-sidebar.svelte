@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+  import * as Sidebar from '@codelinks/ui/sidebar';
   import { NavMain, NavProjects, NavUser, TeamSwitcher } from '$lib/components/sidebar/index.js';
   import { page } from '$app/stores';
   import { goto } from '$app/navigation';

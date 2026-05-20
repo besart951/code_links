@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { page } from '$app/stores';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Textarea } from '$lib/components/ui/textarea/index.js';
-  import { Skeleton } from '$lib/components/ui/skeleton/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Textarea } from '@codelinks/ui/textarea';
+  import { Skeleton } from '@codelinks/ui/skeleton';
+  import * as Table from '@codelinks/ui/table';
   import ConfirmDialog from '$lib/components/confirm-dialog.svelte';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
   import { createTranslator } from '$lib/i18n/translator.js';

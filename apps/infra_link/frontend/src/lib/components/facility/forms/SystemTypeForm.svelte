@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
   import { ManageEntityUseCase } from '$lib/application/useCases/manageEntityUseCase.js';
   import { systemTypeRepository } from '$lib/infrastructure/api/systemTypeRepository.js';
   const manageSystemType = new ManageEntityUseCase(systemTypeRepository);

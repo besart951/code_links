@@ -1,8 +1,8 @@
 <script lang="ts">
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+  import * as DropdownMenu from '@codelinks/ui/dropdown-menu';
   import { createTranslator } from '$lib/i18n/translator';
-  import { useSidebar } from '$lib/components/ui/sidebar/context.svelte.js';
-  import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+  import { useSidebar } from '@codelinks/ui/sidebar';
+  import * as Sidebar from '@codelinks/ui/sidebar';
   import EllipsisIcon from '@lucide/svelte/icons/ellipsis';
   import FolderIcon from '@lucide/svelte/icons/folder';
   import ForwardIcon from '@lucide/svelte/icons/forward';

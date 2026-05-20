@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Role, Permission } from '$lib/domain/role/index.js';
   import type { Component } from 'svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
   import { Search } from '@lucide/svelte';
   import Users from '@lucide/svelte/icons/users';
   import Building2 from '@lucide/svelte/icons/building-2';

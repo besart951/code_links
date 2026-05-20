@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import AsyncCombobox from '$lib/components/ui/combobox/AsyncCombobox.svelte';
-  import StaticCombobox from '$lib/components/ui/combobox/StaticCombobox.svelte';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Switch } from '$lib/components/ui/switch/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { AsyncCombobox } from '@codelinks/ui/combobox';
+  import { StaticCombobox } from '@codelinks/ui/combobox';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
+  import { Switch } from '@codelinks/ui/switch';
   import type { NotificationRuleRecipientType } from '$lib/domain/notification/index.js';
   import type { Project } from '$lib/domain/project/index.js';
   import type { Team } from '$lib/infrastructure/api/teamRepository.js';

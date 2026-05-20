@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { PhasePermission } from '$lib/domain/phase/index.js';
   import type { UserRole } from '$lib/domain/user/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import { Label } from '@codelinks/ui/label';
   import { usePhasePermissionRulesState } from './state/context.svelte.js';
 
   interface Props {

@@ -5,11 +5,11 @@
     FACILITY_RESOURCES,
     type FacilityResource
   } from '$lib/domain/role/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
+  import * as Table from '@codelinks/ui/table';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Button } from '@codelinks/ui/button';
+  import * as DropdownMenu from '@codelinks/ui/dropdown-menu';
+  import { Input } from '@codelinks/ui/input';
   import { MoreVertical, Pencil, Trash2, Search, Plus } from '@lucide/svelte';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { t as translate } from '$lib/i18n/index.js';

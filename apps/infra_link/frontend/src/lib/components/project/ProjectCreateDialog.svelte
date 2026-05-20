@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Dialog from '$lib/components/ui/dialog/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Dialog from '@codelinks/ui/dialog';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
+  import { Textarea } from '@codelinks/ui/textarea';
   import type { ProjectStatus } from '$lib/domain/project/index.js';
   import ProjectPhaseSelect from './ProjectPhaseSelect.svelte';
   import type { CreateProjectField, ProjectListPageState } from './ProjectListPageState.svelte.js';

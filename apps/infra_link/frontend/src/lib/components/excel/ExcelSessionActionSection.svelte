@@ -1,6 +1,6 @@
 <script lang="ts">
   import { CircleCheck } from '@lucide/svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Button } from '@codelinks/ui/button';
   import type { ExcelReadSession } from '$lib/domain/excel/index.js';
 
   interface Props {

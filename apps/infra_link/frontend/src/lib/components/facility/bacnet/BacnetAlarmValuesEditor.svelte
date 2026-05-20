@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import { Textarea } from '@codelinks/ui/textarea';
   import type { AlarmTypeField, AlarmValueDraft } from '$lib/domain/facility/index.js';
   import { bacnetAlarmRepository } from '$lib/infrastructure/api/bacnetAlarmRepository.js';
   import { createTranslator } from '$lib/i18n/translator.js';

@@ -1,11 +1,11 @@
 <script lang="ts">
-  import * as Alert from '$lib/components/ui/alert/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import * as Switch from '$lib/components/ui/switch/index.js';
+  import * as Alert from '@codelinks/ui/alert';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Button } from '@codelinks/ui/button';
+  import * as Card from '@codelinks/ui/card';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
+  import * as Switch from '@codelinks/ui/switch';
   import { cn } from '$lib/utils.js';
   import type {
     SMTPAuthMode,

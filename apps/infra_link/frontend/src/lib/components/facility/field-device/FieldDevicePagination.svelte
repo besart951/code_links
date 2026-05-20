@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Button } from '@codelinks/ui/button';
   import { ChevronLeft, ChevronRight } from '@lucide/svelte';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { useFieldDeviceState } from './state/context.svelte.js';

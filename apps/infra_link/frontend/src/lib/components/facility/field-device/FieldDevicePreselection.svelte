@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import AsyncCombobox from '$lib/components/ui/combobox/AsyncCombobox.svelte';
+  import { Button } from '@codelinks/ui/button';
+  import { Label } from '@codelinks/ui/label';
+  import { Input } from '@codelinks/ui/input';
+  import { AsyncCombobox } from '@codelinks/ui/combobox';
   import { RefreshCw } from '@lucide/svelte';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { t as translate } from '$lib/i18n/index.js';

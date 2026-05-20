@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as Card from '$lib/components/ui/card/index.js';
+  import * as Card from '@codelinks/ui/card';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { useSPSControllerDetailState } from './state/context.svelte.js';
 

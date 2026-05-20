@@ -11,6 +11,10 @@ A human identity authenticated by the central Platform. A User can belong to
 many Tenants.
 _Avoid_: account, login when referring to the person.
 
+**Session**:
+Authenticated continuity for one User login. A Session can be revoked and is
+used to derive the User for Platform requests.
+
 **Tenant**:
 The account scope that owns product access, billing state and membership. A
 Tenant can represent one person, a team, a company or a customer mandate.
@@ -40,6 +44,11 @@ An independently runnable CodeLinks application such as `infra_link`,
 The backend owned by one Product. It must enforce Platform Entitlements before
 executing gated behavior.
 
+**Product Client**:
+The server-side identity of a Product backend when it asks Platform for
+authorization decisions or audience-scoped Access Tokens.
+_Avoid_: frontend app, browser client.
+
 **ProductAccess**:
 The Platform decision that a Tenant may open a Product at all. It is derived
 from active Subscriptions, manual grants or trials.
@@ -67,11 +76,65 @@ from a Subscription, a manual override or a trial.
 A quota or numeric limit attached to a feature grant, such as
 `max_employees = 10`.
 
+**AuthorizationSnapshot**:
+A short-lived, audience-scoped snapshot of the authorization facts a Product
+backend needs for one User in one Tenant. It can include Roles, Permissions,
+ProductAccess, Entitlements, FeatureLimits and version fields, but not profile,
+billing or payment data.
+_Avoid_: LicenseSnapshot, user profile token.
+
+**Audience-scoped Access Token**:
+A token issued for exactly one Product backend after Platform validates the
+Session, Tenant membership, ProductAccess and Product Client audience. The
+receiving Product can only decrypt and use the token when its audience and key
+match.
+_Avoid_: global access token.
+
+**Token Version**:
+The User or Session version used to invalidate existing Access Tokens after
+security-sensitive account or session changes.
+
+**Entitlements Version**:
+The Tenant and Product version used to detect stale AuthorizationSnapshots after
+Role, Permission, Subscription or Entitlement changes.
+
 ## Platform
 
 **Platform**:
 The central modular Go monolith for authentication, Tenants, RBAC, billing
 primitives and Entitlements.
+
+**Superadmin**:
+A Platform operator role with cross-Tenant access for support, security and
+backoffice administration. Superadmin access is separate from Tenant admin
+access and must be treated as privileged.
+_Avoid_: owner, admin when the scope is only one Tenant.
+
+**Admin Action**:
+A privileged operation performed in the Superadmin area, such as suspending a
+User, changing a Tenant setting or updating Entitlements. Admin Actions must be
+audited.
+
+**Reason**:
+The human explanation supplied for a sensitive Admin Action. Reason text is part
+of the audit trail and prevents silent changes.
+
+**Audit Log**:
+An append-only record of important authentication, authorization, Superadmin,
+security and system events. It is searchable and filterable, but not editable.
+
+**Global Search**:
+The Superadmin search surface over safe summaries of Platform records, such as
+Users, Tenants, Subscriptions, Audit Logs and Notifications. It must avoid
+indexing or returning unnecessary sensitive data.
+
+**Notification Rule**:
+A typed configuration that decides when a Notification Event should be delivered
+and through which channel.
+
+**System Setting**:
+A typed Platform configuration value. Sensitive System Setting changes require a
+Reason and write an Audit Log entry.
 
 ## Flagged Ambiguities
 
@@ -93,3 +156,14 @@ Developer: "Can they export the monthly plan as Excel?"
 
 Domain expert: "Check FeatureAccess for `planer.excel_export`, then apply any
 FeatureLimit attached to the Tenant's Plan."
+
+Developer: "Can InfraLink decide from the token alone?"
+
+Domain expert: "It may use the AuthorizationSnapshot for quick checks, but must
+ask Platform again when the snapshot version is stale or the action needs a
+fresh decision."
+
+Developer: "Who can request an InfraLink token?"
+
+Domain expert: "The request must combine the User's active Session with the
+InfraLink Product Client. The request body cannot choose the User or audience."

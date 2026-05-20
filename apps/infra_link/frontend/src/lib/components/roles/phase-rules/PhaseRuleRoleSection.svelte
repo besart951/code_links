@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { Role } from '$lib/domain/role/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
+  import { Badge } from '@codelinks/ui/badge';
+  import * as Table from '@codelinks/ui/table';
   import RoleBadge from '$lib/components/role-badge.svelte';
   import { t as translate } from '$lib/i18n/index.js';
   import PhaseRulePermissionGrid from './PhaseRulePermissionGrid.svelte';

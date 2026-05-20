@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as Avatar from '$lib/components/ui/avatar/index.js';
+  import * as Avatar from '@codelinks/ui/avatar';
   import { cn } from '$lib/utils.js';
 
   interface Props {

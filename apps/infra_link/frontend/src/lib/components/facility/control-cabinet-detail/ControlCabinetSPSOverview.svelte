@@ -1,9 +1,9 @@
 <script lang="ts">
-  import * as Card from '$lib/components/ui/card/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
-  import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import * as Card from '@codelinks/ui/card';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Button, buttonVariants } from '@codelinks/ui/button';
+  import * as ButtonGroup from '@codelinks/ui/button-group';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import CpuIcon from '@lucide/svelte/icons/cpu';
   import NetworkIcon from '@lucide/svelte/icons/network';
   import PencilIcon from '@lucide/svelte/icons/pencil';

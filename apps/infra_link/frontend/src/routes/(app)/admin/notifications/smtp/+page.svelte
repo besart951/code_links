@@ -9,11 +9,11 @@
   } from '$lib/components/notifications/index.js';
   import { SMTPManagementPageState } from '$lib/components/notifications/SMTPManagementPageState.svelte.js';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
-  import * as Alert from '$lib/components/ui/alert/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { buttonVariants } from '$lib/components/ui/button/index.js';
-  import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import * as Alert from '@codelinks/ui/alert';
+  import { Badge } from '@codelinks/ui/badge';
+  import { buttonVariants } from '@codelinks/ui/button';
+  import * as ButtonGroup from '@codelinks/ui/button-group';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import { createTranslator } from '$lib/i18n/translator.js';
   import type { PageData } from './$types.js';
 

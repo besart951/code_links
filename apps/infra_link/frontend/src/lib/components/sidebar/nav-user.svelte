@@ -1,8 +1,8 @@
 <script lang="ts">
-  import * as Avatar from '$lib/components/ui/avatar/index.js';
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-  import { useSidebar } from '$lib/components/ui/sidebar/index.js';
+  import * as Avatar from '@codelinks/ui/avatar';
+  import * as DropdownMenu from '@codelinks/ui/dropdown-menu';
+  import * as Sidebar from '@codelinks/ui/sidebar';
+  import { useSidebar } from '@codelinks/ui/sidebar';
   import { initAppearance, setThemePreference } from '$lib/stores/appearance.js';
   import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
   import LogOutIcon from '@lucide/svelte/icons/log-out';

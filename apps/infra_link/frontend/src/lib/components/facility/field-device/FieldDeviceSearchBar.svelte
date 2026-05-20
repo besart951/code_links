@@ -1,11 +1,11 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import { buttonVariants } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
+  import { buttonVariants } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
   import { Search, Trash2, Settings2, TableIcon, Filter, X, RefreshCcw } from '@lucide/svelte';
   import { createTranslator } from '$lib/i18n/translator.js';
-  import * as ButtonGroup from '$lib/components/ui/button-group/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import * as ButtonGroup from '@codelinks/ui/button-group';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import FieldDeviceViewPopover from './FieldDeviceViewPopover.svelte';
   import { useFieldDeviceState } from './state/context.svelte.js';
 

@@ -1,7 +1,7 @@
 <script lang="ts">
   import CheckIcon from '@lucide/svelte/icons/check';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Button } from '@codelinks/ui/button';
   import { cn } from '$lib/utils.js';
 
   export interface SMTPModeOption {

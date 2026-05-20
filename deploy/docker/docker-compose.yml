@@ -29,7 +29,7 @@ services:
       CODELINKS_PLANER_LINK_DB_PASSWORD: ${CODELINKS_PLANER_LINK_DB_PASSWORD:-planer_dev_password}
       CODELINKS_LOKA_LINK_DB_PASSWORD: ${CODELINKS_LOKA_LINK_DB_PASSWORD:-loka_dev_password}
     volumes:
-      - postgres18_data:/var/lib/postgresql/data
+      - postgres18_data:/var/lib/postgresql
       - ./postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]

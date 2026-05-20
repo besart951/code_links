@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Input } from '$lib/components/ui/input/index.js';
+  import { Input } from '@codelinks/ui/input';
   import { createTranslator } from '$lib/i18n/translator.js';
   import type { FieldDeviceImportService } from './FieldDeviceImportService.svelte.js';
   import type { FieldDeviceImportDevicePlan } from './fieldDeviceExportImporter.js';

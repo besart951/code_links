@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
   import BuildingSelect from '../selects/BuildingSelect.svelte';
   import { ManageControlCabinetUseCase } from '$lib/application/useCases/facility/manageControlCabinetUseCase.js';
   import { controlCabinetRepository } from '$lib/infrastructure/api/controlCabinetRepository.js';

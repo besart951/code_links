@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Permission } from '$lib/domain/role/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Label } from '@codelinks/ui/label';
   import { cn } from '$lib/utils.js';
   import { useRolePermissionEditorState } from './state/context.svelte.js';
 

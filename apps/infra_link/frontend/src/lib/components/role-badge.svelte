@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { UserRole } from '$lib/infrastructure/api/userRepository.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
+  import { Badge } from '@codelinks/ui/badge';
   import { ShieldCheck, UserCircle } from '@lucide/svelte';
 
   interface Props {

@@ -79,7 +79,7 @@ vi.mock('$lib/utils/permissions.js', () => ({
   canPerform: (action: string, resource: string) => state.canPerform(action, resource)
 }));
 
-vi.mock('$lib/components/ui/sidebar/index.js', async () => {
+vi.mock('@codelinks/ui/sidebar', async () => {
   const { default: SlotContainer } = await import('../../setup/stubs/SlotContainer.svelte');
   return {
     Root: SlotContainer,

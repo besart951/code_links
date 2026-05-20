@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getErrorMessage } from '$lib/api/client.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Card from '@codelinks/ui/card';
   import NotificationRuleFormSection from './NotificationRuleFormSection.svelte';
   import NotificationRuleListSection from './NotificationRuleListSection.svelte';
   import type {

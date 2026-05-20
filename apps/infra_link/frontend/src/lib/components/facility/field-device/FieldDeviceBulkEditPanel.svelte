@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Card from '@codelinks/ui/card';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
   import { ChevronDown, ChevronRight, CopyCheck, Eraser } from '@lucide/svelte';
   import { addToast } from '$lib/components/toast.svelte';
   import TableApparatSelect from '../table-selects/TableApparatSelect.svelte';

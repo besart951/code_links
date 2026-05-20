@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onDestroy } from 'svelte';
-  import * as Alert from '$lib/components/ui/alert/index.js';
+  import * as Alert from '@codelinks/ui/alert';
   import { AlertCircle } from '@lucide/svelte';
   import MultiCreateSelectionSection from './multi-create/MultiCreateSelectionSection.svelte';
   import MultiCreateRowsSection from './multi-create/MultiCreateRowsSection.svelte';

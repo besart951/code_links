@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import * as Dialog from '$lib/components/ui/dialog/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import { Button, buttonVariants } from '@codelinks/ui/button';
+  import { Badge } from '@codelinks/ui/badge';
+  import * as Dialog from '@codelinks/ui/dialog';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import { addToast } from '$lib/components/toast.svelte';
   import { getErrorMessage } from '$lib/api/client.js';
   import { createTranslator } from '$lib/i18n/translator.js';

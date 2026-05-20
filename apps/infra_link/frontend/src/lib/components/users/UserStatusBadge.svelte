@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Badge } from '$lib/components/ui/badge/index.js';
+  import { Badge } from '@codelinks/ui/badge';
   import type { UserDirectoryUser } from '$lib/infrastructure/api/userRepository.js';
   import { createTranslator } from '$lib/i18n/translator.js';
 

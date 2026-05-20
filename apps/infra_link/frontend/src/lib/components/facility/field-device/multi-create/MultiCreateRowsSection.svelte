@@ -1,9 +1,9 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Button } from '@codelinks/ui/button';
   import FieldDeviceRow from '../FieldDeviceRow.svelte';
-  import * as Table from '$lib/components/ui/table/index.js';
-  import * as Alert from '$lib/components/ui/alert/index.js';
-  import { Separator } from '$lib/components/ui/separator/index.js';
+  import * as Table from '@codelinks/ui/table';
+  import * as Alert from '@codelinks/ui/alert';
+  import { Separator } from '@codelinks/ui/separator';
   import { Plus, CircleAlert } from '@lucide/svelte';
   import { createTranslator } from '$lib/i18n/translator.js';
 

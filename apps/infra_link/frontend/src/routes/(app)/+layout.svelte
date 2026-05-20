@@ -3,9 +3,9 @@
   import AppSidebar from '$lib/components/app-sidebar.svelte';
   import { NotificationBell } from '$lib/components/notifications/index.js';
   import Toasts from '$lib/components/toast.svelte';
-  import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
-  import { Separator } from '$lib/components/ui/separator/index.js';
-  import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+  import * as Breadcrumb from '@codelinks/ui/breadcrumb';
+  import { Separator } from '@codelinks/ui/separator';
+  import * as Sidebar from '@codelinks/ui/sidebar';
   import { page } from '$app/stores';
   import type { LayoutData } from './$types.js';
   import { loadAuth } from '$lib/stores/auth.svelte.js';

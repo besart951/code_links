@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import { AlertCircle, Save, Undo } from '@lucide/svelte';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { useFieldDeviceState } from './state/context.svelte.js';

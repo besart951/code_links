@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { EditableCell } from '$lib/components/ui/editable-cell/index.js';
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Table from '@codelinks/ui/table';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import { EditableCell } from '@codelinks/ui/editable-cell';
+  import * as DropdownMenu from '@codelinks/ui/dropdown-menu';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import HistoryTimelineDialog from '$lib/components/history/HistoryTimelineDialog.svelte';
   import { keyboardTableCell } from '$lib/actions/keyboardTableNavigation.js';
   import { ChevronDown, ChevronRight, RotateCcw, Undo2 } from '@lucide/svelte';
@@ -18,7 +18,7 @@
     mergeSelectedRelationOption
   } from '../table-selects/relationSelectOptions.js';
   import type { RelationFilterSource } from '../table-selects/relationSelectOptions.js';
-  import { InlineUndoButton } from '$lib/components/ui/editable-cell/index.js';
+  import { InlineUndoButton } from '@codelinks/ui/editable-cell';
   import type { FieldDevice } from '$lib/domain/facility/index.js';
   import type { SharedFieldDeviceEditor } from '$lib/services/projectCollaboration.svelte.js';
   import { createTranslator } from '$lib/i18n/translator.js';

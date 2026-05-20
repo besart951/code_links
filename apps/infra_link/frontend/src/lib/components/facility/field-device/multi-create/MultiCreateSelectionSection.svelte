@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import AsyncCombobox from '$lib/components/ui/combobox/AsyncCombobox.svelte';
+  import { Label } from '@codelinks/ui/label';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import { AsyncCombobox } from '@codelinks/ui/combobox';
   import FieldDevicePreselection from '../FieldDevicePreselection.svelte';
   import ObjectDataBacnetPreview from './ObjectDataBacnetPreview.svelte';
-  import * as Card from '$lib/components/ui/card/index.js';
+  import * as Card from '@codelinks/ui/card';
   import { createTranslator } from '$lib/i18n/translator.js';
   import type { FieldDeviceMultiCreateState } from './FieldDeviceMultiCreateState.svelte.js';
 

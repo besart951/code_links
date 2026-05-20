@@ -34,7 +34,7 @@
 <script lang="ts">
   import { fly } from 'svelte/transition';
   import { X, CheckCircle, AlertCircle, Info, AlertTriangle } from '@lucide/svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Button } from '@codelinks/ui/button';
   import { createTranslator } from '$lib/i18n/translator.js';
 
   const t = createTranslator();

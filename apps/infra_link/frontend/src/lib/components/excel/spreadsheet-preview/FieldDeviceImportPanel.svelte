@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import type { WorksheetPreview } from '$lib/domain/excel/index.js';
   import { GitBranch, LoaderCircle, Play, WandSparkles } from '@lucide/svelte';
   import { createTranslator } from '$lib/i18n/translator.js';

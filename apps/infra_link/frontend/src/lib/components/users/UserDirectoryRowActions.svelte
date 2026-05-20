@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as DropdownMenu from '@codelinks/ui/dropdown-menu';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import { createTranslator } from '$lib/i18n/translator.js';
   import type { UserDirectoryUser } from '$lib/infrastructure/api/userRepository.js';
   import MoreVertical from '@lucide/svelte/icons/more-vertical';

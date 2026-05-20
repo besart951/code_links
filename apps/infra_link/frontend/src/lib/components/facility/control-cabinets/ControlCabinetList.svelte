@@ -1,13 +1,13 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as DropdownMenu from '@codelinks/ui/dropdown-menu';
+  import * as Table from '@codelinks/ui/table';
   import PaginatedList from '$lib/components/list/PaginatedList.svelte';
   import ControlCabinetForm from '$lib/components/facility/forms/ControlCabinetForm.svelte';
   import ProjectMultiSelectFilter from '$lib/components/facility/shared/ProjectMultiSelectFilter.svelte';
   import HistoryTimelineDialog from '$lib/components/history/HistoryTimelineDialog.svelte';
-  import { Skeleton } from '$lib/components/ui/skeleton/index.js';
+  import { Skeleton } from '@codelinks/ui/skeleton';
   import type { ControlCabinet } from '$lib/domain/facility/index.js';
   import { createTranslator } from '$lib/i18n/translator.js';
   import EllipsisIcon from '@lucide/svelte/icons/ellipsis';

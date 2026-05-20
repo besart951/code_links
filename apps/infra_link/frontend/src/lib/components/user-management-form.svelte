@@ -1,11 +1,11 @@
 <script lang="ts">
   import { getAllowedRolesForCreation } from '$lib/stores/auth.svelte';
   import { getErrorMessage, getFieldErrors } from '$lib/api/client.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import * as Popover from '$lib/components/ui/popover/index.js';
-  import * as Command from '$lib/components/ui/command/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
+  import * as Popover from '@codelinks/ui/popover';
+  import * as Command from '@codelinks/ui/command';
   import { Check } from '@lucide/svelte';
   import { cn } from '$lib/utils.js';
   import { createTranslator } from '$lib/i18n/translator.js';

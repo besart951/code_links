@@ -1,8 +1,8 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as DropdownMenu from '@codelinks/ui/dropdown-menu';
+  import * as Table from '@codelinks/ui/table';
   import EllipsisIcon from '@lucide/svelte/icons/ellipsis';
   import { systemTypesStore } from '$lib/stores/list/entityStores.js';
   import type { SystemType } from '$lib/domain/facility/index.js';

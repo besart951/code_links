@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
   import { ManageObjectDataUseCase } from '$lib/application/useCases/facility/manageObjectDataUseCase.js';
   import { objectDataRepository } from '$lib/infrastructure/api/objectDataRepository.js';
   const manageObjectData = new ManageObjectDataUseCase(objectDataRepository);

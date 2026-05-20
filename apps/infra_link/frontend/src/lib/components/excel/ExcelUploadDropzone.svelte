@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Upload, FileSpreadsheet } from '@lucide/svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
 
   interface Props {
     disabled?: boolean;

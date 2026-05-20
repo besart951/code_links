@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import ConfirmDialog from '$lib/components/confirm-dialog.svelte';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
   import UserCreateDialog from '$lib/components/users/UserCreateDialog.svelte';

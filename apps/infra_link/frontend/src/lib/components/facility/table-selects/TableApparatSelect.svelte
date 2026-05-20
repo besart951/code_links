@@ -1,5 +1,5 @@
 <script lang="ts">
-  import StaticCombobox from '$lib/components/ui/combobox/StaticCombobox.svelte';
+  import { StaticCombobox } from '@codelinks/ui/combobox';
   import type { Apparat } from '$lib/domain/facility/index.js';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { formatRelationSelectLabel } from './relationSelectOptions.js';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AsyncMultiSelect from '$lib/components/ui/combobox/AsyncMultiSelect.svelte';
+  import { AsyncMultiSelect } from '@codelinks/ui/combobox';
   import { apparatRepository } from '$lib/infrastructure/api/apparatRepository.js';
   import type { Apparat } from '$lib/domain/facility/index.js';
   import { createTranslator } from '$lib/i18n/translator.js';

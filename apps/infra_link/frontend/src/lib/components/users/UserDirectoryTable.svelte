@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import { Badge } from '@codelinks/ui/badge';
+  import * as Table from '@codelinks/ui/table';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import RoleBadge from '$lib/components/role-badge.svelte';
   import UserAvatar from '$lib/components/user-avatar.svelte';
   import { createTranslator } from '$lib/i18n/translator.js';

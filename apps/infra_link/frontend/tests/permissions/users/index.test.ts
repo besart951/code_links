@@ -130,7 +130,7 @@ vi.mock('$lib/components/user-management-form.svelte', async () => {
   return { default: SlotContainer };
 });
 
-vi.mock('$lib/components/ui/dialog/index.js', async () => {
+vi.mock('@codelinks/ui/dialog', async () => {
   const { default: SlotContainer } = await import('../../setup/stubs/SlotContainer.svelte');
   return {
     Root: SlotContainer,

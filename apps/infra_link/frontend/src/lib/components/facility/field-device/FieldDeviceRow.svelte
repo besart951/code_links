@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import * as Table from '@codelinks/ui/table';
   import { Trash2 } from '@lucide/svelte';
   import type { FieldDeviceMultiCreateState } from './multi-create/FieldDeviceMultiCreateState.svelte.js';
   import { createTranslator } from '$lib/i18n/translator.js';

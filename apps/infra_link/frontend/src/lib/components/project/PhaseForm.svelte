@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
   import type { Phase } from '$lib/domain/phase/index.js';
   import { createPhase, updatePhase } from '$lib/infrastructure/api/phase.adapter.js';
   import { useFormState } from '$lib/hooks/useFormState.svelte.js';

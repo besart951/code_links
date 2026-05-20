@@ -1,7 +1,7 @@
 <script lang="ts">
   import type { PhasePermission } from '$lib/domain/phase/index.js';
   import type { UserRole } from '$lib/domain/user/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Button } from '@codelinks/ui/button';
   import { t as translate } from '$lib/i18n/index.js';
   import { Ban, Eye, Pencil, Plus, RotateCcw, ShieldCheck } from '@lucide/svelte';
   import { usePhasePermissionRulesState } from './state/context.svelte.js';

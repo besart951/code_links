@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as Dialog from '$lib/components/ui/dialog/index.js';
+  import * as Dialog from '@codelinks/ui/dialog';
   import UserManagementForm from '$lib/components/user-management-form.svelte';
   import { createTranslator } from '$lib/i18n/translator.js';
   import type { UserDirectoryPageState } from './UserDirectoryPageState.svelte.js';

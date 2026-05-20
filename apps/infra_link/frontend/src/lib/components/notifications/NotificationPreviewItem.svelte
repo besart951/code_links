@@ -1,6 +1,6 @@
 <script lang="ts">
   import NotificationActions from '$lib/components/notifications/NotificationActions.svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Button } from '@codelinks/ui/button';
   import type { SystemNotification } from '$lib/domain/notification/index.js';
   import StarIcon from '@lucide/svelte/icons/star';
 

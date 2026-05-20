@@ -47,12 +47,12 @@ vi.mock('$lib/components/toast.svelte', async () => {
   return { default: SlotContainer };
 });
 
-vi.mock('$lib/components/ui/separator/index.js', async () => {
+vi.mock('@codelinks/ui/separator', async () => {
   const { default: SlotContainer } = await import('../../setup/stubs/SlotContainer.svelte');
   return { Separator: SlotContainer };
 });
 
-vi.mock('$lib/components/ui/sidebar/index.js', async () => {
+vi.mock('@codelinks/ui/sidebar', async () => {
   const { default: SlotContainer } = await import('../../setup/stubs/SlotContainer.svelte');
   return {
     Provider: SlotContainer,
@@ -61,7 +61,7 @@ vi.mock('$lib/components/ui/sidebar/index.js', async () => {
   };
 });
 
-vi.mock('$lib/components/ui/breadcrumb/index.js', async () => {
+vi.mock('@codelinks/ui/breadcrumb', async () => {
   const { default: SlotContainer } = await import('../../setup/stubs/SlotContainer.svelte');
   return {
     Root: SlotContainer,

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import * as Alert from '$lib/components/ui/alert/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import * as Alert from '@codelinks/ui/alert';
+  import { Button } from '@codelinks/ui/button';
+  import * as Card from '@codelinks/ui/card';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
+  import { Textarea } from '@codelinks/ui/textarea';
   import type {
     SendSMTPTestEmailRequest,
     SMTPSettings,

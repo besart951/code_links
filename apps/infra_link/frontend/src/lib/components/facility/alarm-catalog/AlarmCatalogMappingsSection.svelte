@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import * as Card from '@codelinks/ui/card';
+  import * as Table from '@codelinks/ui/table';
   import HistoryTimelineDialog from '$lib/components/history/HistoryTimelineDialog.svelte';
   import { History, Trash2 } from '@lucide/svelte';
   import { canPerform } from '$lib/utils/permissions.js';

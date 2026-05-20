@@ -9,10 +9,10 @@
     createPermissionName,
     parsePermissionName
   } from '$lib/domain/role/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import { Textarea } from '$lib/components/ui/textarea/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Input } from '@codelinks/ui/input';
+  import { Label } from '@codelinks/ui/label';
+  import { Textarea } from '@codelinks/ui/textarea';
   import { cn } from '$lib/utils.js';
   import Building2 from '@lucide/svelte/icons/building-2';
   import FolderKanban from '@lucide/svelte/icons/folder-kanban';

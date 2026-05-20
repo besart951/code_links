@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { Component } from 'svelte';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
+  import { Checkbox } from '@codelinks/ui/checkbox';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Button } from '@codelinks/ui/button';
   import { ChevronDown, ChevronRight } from '@lucide/svelte';
   import ResourceSection from './ResourceSection.svelte';
   import { useRolePermissionEditorState } from './state/context.svelte.js';

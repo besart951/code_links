@@ -1,8 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Dialog from '$lib/components/ui/dialog/index.js';
-  import * as Table from '$lib/components/ui/table/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Dialog from '@codelinks/ui/dialog';
+  import * as Table from '@codelinks/ui/table';
   import { Pencil, Trash2, Eye } from '@lucide/svelte';
   import PaginatedList from '$lib/components/list/PaginatedList.svelte';
   import ConfirmDialog from '$lib/components/confirm-dialog.svelte';

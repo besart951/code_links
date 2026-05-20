@@ -3,7 +3,7 @@ module github.com/besart951/code_links/platform
 go 1.26.0
 
 require (
-	github.com/golang-jwt/jwt/v5 v5.3.1
+	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/jackc/pgx/v5 v5.9.2
 	golang.org/x/crypto v0.50.0
 )

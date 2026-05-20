@@ -1,5 +1,5 @@
 <script lang="ts">
-  import AsyncCombobox from '$lib/components/ui/combobox/AsyncCombobox.svelte';
+  import { AsyncCombobox } from '@codelinks/ui/combobox';
   import type { StateText } from '$lib/domain/facility/index.js';
   import { createCachedFetchById } from '$lib/infrastructure/api/createCachedFetchById.js';
   import { stateTextRepository } from '$lib/infrastructure/api/stateTextRepository.js';

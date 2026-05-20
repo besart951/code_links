@@ -3,12 +3,12 @@
   import { addToast } from '$lib/components/toast.svelte';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { t as translate } from '$lib/i18n/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Button, buttonVariants } from '$lib/components/ui/button/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
-  import { Label } from '$lib/components/ui/label/index.js';
-  import StaticCombobox from '$lib/components/ui/combobox/StaticCombobox.svelte';
-  import AsyncCombobox from '$lib/components/ui/combobox/AsyncCombobox.svelte';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Button, buttonVariants } from '@codelinks/ui/button';
+  import * as Tooltip from '@codelinks/ui/tooltip';
+  import { Label } from '@codelinks/ui/label';
+  import { StaticCombobox } from '@codelinks/ui/combobox';
+  import { AsyncCombobox } from '@codelinks/ui/combobox';
   import HistoryFieldMultiSelect from '$lib/components/history/HistoryFieldMultiSelect.svelte';
   import TimelineDateTimePicker from '$lib/components/history/TimelineDateTimePicker.svelte';
   import {

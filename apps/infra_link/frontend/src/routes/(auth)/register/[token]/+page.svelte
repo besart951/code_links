@@ -5,16 +5,16 @@
     getRegistrationErrorMessage,
     getRegistrationFieldErrors
   } from '$lib/api/registrations.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Checkbox } from '$lib/components/ui/checkbox/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Checkbox } from '@codelinks/ui/checkbox';
   import {
     Field,
     FieldContent,
     FieldError,
     FieldGroup,
     FieldLabel
-  } from '$lib/components/ui/field/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
+  } from '@codelinks/ui/field';
+  import { Input } from '@codelinks/ui/input';
   import { createTranslator } from '$lib/i18n/translator';
 
   const t = createTranslator();

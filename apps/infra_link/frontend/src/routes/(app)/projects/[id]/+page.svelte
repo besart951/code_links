@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import { page } from '$app/stores';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Skeleton } from '$lib/components/ui/skeleton/index.js';
-  import * as Tabs from '$lib/components/ui/tabs/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Skeleton } from '@codelinks/ui/skeleton';
+  import * as Tabs from '@codelinks/ui/tabs';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import { addToast } from '$lib/components/toast.svelte';
   import ConfirmDialog from '$lib/components/confirm-dialog.svelte';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import { CircleCheck, CircleX, Info, ShieldAlert } from '@lucide/svelte';
   import {
     importStatusIconClass,

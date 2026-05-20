@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
   import NotificationActions from '$lib/components/notifications/NotificationActions.svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
-  import { Input } from '$lib/components/ui/input/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import { Badge } from '@codelinks/ui/badge';
+  import * as Card from '@codelinks/ui/card';
+  import { Input } from '@codelinks/ui/input';
   import NotificationInboxHeader from '$lib/components/notifications/NotificationInboxHeader.svelte';
   import { systemNotificationState } from '$lib/components/notifications/SystemNotificationState.svelte.js';
   import type { SystemNotification } from '$lib/domain/notification/index.js';

@@ -4,7 +4,7 @@
   import ExcelUploadDropzone from '$lib/components/excel/ExcelUploadDropzone.svelte';
   import ExcelReadProgressCard from '$lib/components/excel/ExcelReadProgressCard.svelte';
   import ExcelSessionSummary from '$lib/components/excel/ExcelSessionSummary.svelte';
-  import * as Tabs from '$lib/components/ui/tabs/index.js';
+  import * as Tabs from '@codelinks/ui/tabs';
   import { addToast } from '$lib/components/toast.svelte';
   import { createTranslator } from '$lib/i18n/translator.js';
   import { t as translate } from '$lib/i18n/index.js';

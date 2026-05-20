@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Card from '@codelinks/ui/card';
   import ProjectMultiSelectFilter from '$lib/components/facility/shared/ProjectMultiSelectFilter.svelte';
   import {
     decodeMultiFilter,

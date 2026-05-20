@@ -1,8 +1,8 @@
 <script lang="ts">
   import type { PageData } from './$types.js';
   import { invalidateAll } from '$app/navigation';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
+  import { Button } from '@codelinks/ui/button';
+  import * as Card from '@codelinks/ui/card';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
   import HistoryTimelineDialog from '$lib/components/history/HistoryTimelineDialog.svelte';
   import HistoryIcon from '@lucide/svelte/icons/history';

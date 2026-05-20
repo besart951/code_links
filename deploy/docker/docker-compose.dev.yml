@@ -20,7 +20,7 @@ services:
   postgres:
     image: postgres:18.3-alpine3.23
     ports:
-      - "127.0.0.1:5432:5432"
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-5432}:5432"
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
@@ -30,7 +30,7 @@ services:
       CODELINKS_PLANER_LINK_DB_PASSWORD: ${CODELINKS_PLANER_LINK_DB_PASSWORD:-planer_dev_password}
       CODELINKS_LOKA_LINK_DB_PASSWORD: ${CODELINKS_LOKA_LINK_DB_PASSWORD:-loka_dev_password}
     volumes:
-      - postgres_dev_data:/var/lib/postgresql/data
+      - postgres18_dev_data:/var/lib/postgresql
       - ./postgres-init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-postgres}"]
@@ -65,7 +65,7 @@ services:
       JWT_SECRET: ${PLATFORM_JWT_SECRET:-dev-only-change-me-change-in-prod}
       JWT_ISSUER: codelinks-platform
       PLATFORM_INTERNAL_TOKEN: ${PLATFORM_INTERNAL_TOKEN:-dev-internal-token}
-      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-.codelinks.localhost}
+      COOKIE_DOMAIN: ${COOKIE_DOMAIN:-}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
     depends_on:
       platform-migrate:
@@ -174,6 +174,6 @@ services:
     restart: unless-stopped
 
 volumes:
-  postgres_dev_data:
+  postgres18_dev_data:
   caddy_dev_data:
   caddy_dev_config:

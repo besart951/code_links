@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Input } from '$lib/components/ui/input/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Field from '$lib/components/ui/field/index.js';
+  import { Input } from '@codelinks/ui/input';
+  import { Button } from '@codelinks/ui/button';
+  import * as Field from '@codelinks/ui/field';
   import EntityListHeader from '$lib/components/layout/EntityListHeader.svelte';
   import TrashIcon from '@lucide/svelte/icons/trash-2';
   import type { PageData } from './$types.js';

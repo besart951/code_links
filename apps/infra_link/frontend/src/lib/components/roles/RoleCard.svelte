@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Role } from '$lib/domain/role/index.js';
-  import * as Card from '$lib/components/ui/card/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+  import * as Card from '@codelinks/ui/card';
+  import { Badge } from '@codelinks/ui/badge';
+  import { Button } from '@codelinks/ui/button';
+  import * as Tooltip from '@codelinks/ui/tooltip';
   import RoleBadge from '$lib/components/role-badge.svelte';
   import { Settings2, Shield, Users, ChevronRight } from '@lucide/svelte';
 

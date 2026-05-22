@@ -1,0 +1,13 @@
+{
+	"name": "@codelinks/config",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"exports": {
+		"./typescript": "./tsconfig.base.json",
+		"./products": "./products.ts"
+	},
+	"devDependencies": {
+		"typescript": "^6.0.3"
+	}
+}

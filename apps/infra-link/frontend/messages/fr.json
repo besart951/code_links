@@ -1,0 +1,12 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"app_title": "Infra Link",
+	"headline": "Infra Link",
+	"body": "Facility and IoT workspace for licensed CodeLinks users.",
+	"refresh_session": "Refresh session",
+	"load_api": "Load protected API",
+	"status_signed_in": "Signed in as {name}.",
+	"status_signed_out": "No active session.",
+	"api_success": "Product backend accepted the local JWT for {productId}.",
+	"api_failed": "Product backend rejected access."
+}

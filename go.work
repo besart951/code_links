@@ -1,0 +1,9 @@
+go 1.26
+
+use (
+	./apps/auth-service/backend
+	./apps/infra-link/backend
+	./apps/loka-link/backend
+	./apps/planer-link/backend
+	./packages/productauth
+)

@@ -1,0 +1,25 @@
+{
+	"name": "codelinks-platform",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"packageManager": "pnpm@11.2.2",
+	"scripts": {
+		"dev": "pnpm --filter code-links dev",
+		"dev:admin": "pnpm --filter @codelinks/admin-link dev",
+		"dev:all": "pnpm --parallel --filter code-links --filter @codelinks/admin-link --filter @codelinks/auth-frontend --filter @codelinks/infra-link-frontend --filter @codelinks/planer-link-frontend --filter @codelinks/loka-link-frontend dev",
+		"check": "pnpm -r --if-present check",
+		"test": "pnpm -r --if-present test && pnpm go:test",
+		"test:frontend": "pnpm -r --if-present test",
+		"test:e2e": "pnpm --filter code-links test:e2e",
+		"build": "pnpm -r --if-present build && pnpm go:build",
+		"go:test": "go test ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/productauth/...",
+		"go:build": "pnpm go:test && go build ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/productauth/...",
+		"go:fmt": "gofmt -w apps/*/backend packages/productauth",
+		"compose:dev": "docker compose up --build"
+	},
+	"devDependencies": {
+		"@types/node": "^24.10.1",
+		"typescript": "^6.0.3"
+	}
+}

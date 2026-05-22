@@ -19,9 +19,21 @@ node_modules/
 **/.svelte-kit/
 **/build/
 **/dist/
+**/.output/
+**/.vercel/
+**/.netlify/
+**/.wrangler/
 **/.vite-inspect/
 **/.pnpm-store/
+**/vite.config.js.timestamp-*
+**/vite.config.ts.timestamp-*
 .turbo/
+
+# Generated frontend/i18n/test artifacts
+**/src/lib/paraglide/
+**/project.inlang/cache/
+**/test-results/
+**/playwright-report/
 
 # Go/Rust/build output
 *.exe
@@ -47,6 +59,8 @@ backend/tmp/
 
 # Logs
 *.log
+.logs/
+.codex/
 npm-debug.log*
 pnpm-debug.log*
 yarn-debug.log*

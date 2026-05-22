@@ -1,0 +1,34 @@
+http://code-links.codelinks.localhost {
+	reverse_proxy code-links-web:5173
+}
+
+http://auth.codelinks.localhost {
+	handle /.well-known/* {
+		reverse_proxy auth-service:8080
+	}
+	handle /api/* {
+		reverse_proxy auth-service:8080
+	}
+	reverse_proxy auth-frontend:5174
+}
+
+http://infra-link.codelinks.localhost {
+	handle /api/* {
+		reverse_proxy infra-link-api:8091
+	}
+	reverse_proxy infra-link-web:5175
+}
+
+http://planer-link.codelinks.localhost {
+	handle /api/* {
+		reverse_proxy planer-link-api:8092
+	}
+	reverse_proxy planer-link-web:5176
+}
+
+http://loka-link.codelinks.localhost {
+	handle /api/* {
+		reverse_proxy loka-link-api:8093
+	}
+	reverse_proxy loka-link-web:5177
+}

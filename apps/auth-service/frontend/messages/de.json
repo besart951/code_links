@@ -1,0 +1,13 @@
+{
+	"$schema": "https://inlang.com/schema/inlang-message-format",
+	"app_title": "CodeLinks Auth",
+	"headline": "Anmelden",
+	"body": "Dieser Login spricht mit dem zentralen Auth-Service und setzt eine httpOnly Refresh-Session.",
+	"email_label": "E-Mail",
+	"password_label": "Passwort",
+	"login": "Einloggen",
+	"logout": "Logout",
+	"status_signed_in": "Angemeldet als {name}.",
+	"status_signed_out": "Nicht angemeldet.",
+	"login_failed": "Login fehlgeschlagen."
+}

@@ -1,3 +1,0 @@
-# Audience-scoped nested JWE tokens
-
-Platform issues short-lived nested tokens for Product backends: an Ed25519 JWS inside an ECDH-ES/A256GCM JWE encrypted for one audience key. Token exchange requires both the User's active Session and an authenticated Product Client; User, Session, Tenant version and audience fields are derived server-side and are never trusted from request bodies. Product backends may use the audience-scoped AuthorizationSnapshot for fast checks, but Platform remains the source of truth and must be called for sensitive decisions or version mismatches. This keeps private user and billing data out of tokens, avoids one global decryption key across products, and preserves the modular-monolith boundary from ADR-0001.

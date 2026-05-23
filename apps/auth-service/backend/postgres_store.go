@@ -27,6 +27,10 @@ func openStore(ctx context.Context, config config) (Store, func(), error) {
 		pool, err := pgxpool.New(ctx, config.DatabaseURL)
 		if err == nil {
 			if err = pool.Ping(ctx); err == nil {
+				if err = runMigrations(ctx, pool); err != nil {
+					pool.Close()
+					return nil, func() {}, err
+				}
 				return &postgresStore{pool: pool}, pool.Close, nil
 			}
 			pool.Close()

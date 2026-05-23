@@ -35,6 +35,7 @@ Local Caddy hosts:
 
 - `http://code-links.codelinks.localhost`
 - `http://auth.codelinks.localhost`
+- `http://admin-link.codelinks.localhost`
 - `http://infra-link.codelinks.localhost`
 - `http://planer-link.codelinks.localhost`
 - `http://loka-link.codelinks.localhost`

@@ -1,7 +1,8 @@
 import { fail } from '@sveltejs/kit';
+import { isRole } from '@codelinks/config/admin-access';
 import { canSeeRawIpAddress } from '$lib/domain/admin-access/permissions';
 import type { UserListQuery, UserStatus } from '$lib/domain/users/types';
-import { adminContainer } from '$lib/server/admin-container';
+import { createAdminContainer } from '$lib/server/admin-container';
 import { requireAdmin } from '$lib/server/auth';
 
 function parseStatus(value: string | null): UserStatus | undefined {
@@ -24,9 +25,10 @@ function parseUserQuery(url: URL): UserListQuery {
 	};
 }
 
-export async function load({ locals, url }) {
-	const admin = requireAdmin(locals);
-	const query = parseUserQuery(url);
+export async function load(event) {
+	const admin = requireAdmin(event.locals);
+	const adminContainer = createAdminContainer(event);
+	const query = parseUserQuery(event.url);
 	const users = await adminContainer.listUsers.execute(admin, query);
 
 	return {
@@ -37,9 +39,10 @@ export async function load({ locals, url }) {
 }
 
 export const actions = {
-	setStatus: async ({ request, locals }) => {
-		const admin = requireAdmin(locals);
-		const formData = await request.formData();
+	setStatus: async (event) => {
+		const admin = requireAdmin(event.locals);
+		const adminContainer = createAdminContainer(event);
+		const formData = await event.request.formData();
 		const userId = String(formData.get('userId') ?? '');
 		const status = parseStatus(String(formData.get('status') ?? ''));
 
@@ -51,13 +54,14 @@ export const actions = {
 
 		return { ok: true };
 	},
-	setRole: async ({ request, locals }) => {
-		const admin = requireAdmin(locals);
-		const formData = await request.formData();
+	setRole: async (event) => {
+		const admin = requireAdmin(event.locals);
+		const adminContainer = createAdminContainer(event);
+		const formData = await event.request.formData();
 		const userId = String(formData.get('userId') ?? '');
 		const role = String(formData.get('role') ?? '');
 
-		if (!userId || !['admin', 'support', 'auditor', 'user'].includes(role)) {
+		if (!userId || !isRole(role)) {
 			return fail(400, { message: 'Invalid role change request' });
 		}
 

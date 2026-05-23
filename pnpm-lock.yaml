@@ -20,6 +20,9 @@ importers:
       '@codelinks/auth-client':
         specifier: workspace:*
         version: link:../../packages/auth-client
+      '@codelinks/config':
+        specifier: workspace:*
+        version: link:../../packages/config
       '@codelinks/ui-library':
         specifier: workspace:*
         version: link:../../packages/ui-library

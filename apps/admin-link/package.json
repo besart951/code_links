@@ -15,6 +15,7 @@
 	},
 	"dependencies": {
 		"@codelinks/auth-client": "workspace:*",
+		"@codelinks/config": "workspace:*",
 		"@codelinks/ui-library": "workspace:*",
 		"@fontsource-variable/roboto": "^5.2.10",
 		"clsx": "^2.1.1",

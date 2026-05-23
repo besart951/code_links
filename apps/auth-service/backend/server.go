@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/besart951/code-links/packages/productcatalog"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -1016,12 +1017,7 @@ func decodeJSON(w http.ResponseWriter, r *http.Request, target any) bool {
 }
 
 func validProductID(productID string) bool {
-	switch productID {
-	case "infra-link", "planer-link", "loka-link":
-		return true
-	default:
-		return false
-	}
+	return productcatalog.IsValidID(productID)
 }
 
 func writeJSON(w http.ResponseWriter, status int, body any) {

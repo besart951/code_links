@@ -5,8 +5,7 @@ import { createMockAdminActor } from '$lib/server/mock-admin-auth';
 import type { AdminActor } from '$lib/domain/admin-access/types';
 
 export const handle: Handle = async ({ event, resolve }) => {
-	const allowMockAdmin =
-		env.ADMIN_LINK_MOCK_AUTH === 'true' || (dev && !event.cookies.get('refresh_token'));
+	const allowMockAdmin = env.ADMIN_LINK_MOCK_AUTH === 'true';
 	const requestedRole = event.url.searchParams.get('as') ?? event.cookies.get('admin_role') ?? null;
 
 	event.locals.admin = allowMockAdmin ? createMockAdminActor(requestedRole) : await fetchAdminActor(event);
@@ -35,6 +34,6 @@ async function fetchAdminActor(event: Parameters<Handle>[0]['event']): Promise<A
 
 		return (await response.json()) as AdminActor;
 	} catch {
-		return dev ? createMockAdminActor(null) : null;
+		return null;
 	}
 }

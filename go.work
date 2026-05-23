@@ -6,4 +6,12 @@ use (
 	./apps/loka-link/backend
 	./apps/planer-link/backend
 	./packages/productauth
+	./packages/productcatalog
+	./packages/productserver
 )
+
+replace github.com/besart951/code-links/packages/productcatalog v0.0.0 => ./packages/productcatalog
+
+replace github.com/besart951/code-links/packages/productauth v0.0.0 => ./packages/productauth
+
+replace github.com/besart951/code-links/packages/productserver v0.0.0 => ./packages/productserver

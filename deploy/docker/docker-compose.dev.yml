@@ -9,7 +9,6 @@ services:
       - "5432:5432"
     volumes:
       - codelinks-postgres:/var/lib/postgresql/data
-      - ../../apps/auth-service/backend/migrations:/docker-entrypoint-initdb.d:ro
 
   auth-service:
     image: golang:1.26-alpine
@@ -21,7 +20,7 @@ services:
       JWT_ISSUER: http://auth.codelinks.localhost
       JWT_AUDIENCE: codelinks-products
       COOKIE_DOMAIN: .codelinks.localhost
-      ALLOWED_ORIGINS: http://code-links.codelinks.localhost,http://auth.codelinks.localhost
+      ALLOWED_ORIGINS: http://code-links.codelinks.localhost,http://admin-link.codelinks.localhost,http://auth.codelinks.localhost
     depends_on:
       - postgres
     ports:
@@ -100,6 +99,18 @@ services:
     volumes:
       - ../..:/workspace
 
+  admin-link-web:
+    image: node:24-alpine
+    working_dir: /workspace
+    command: sh -c "corepack enable && corepack pnpm install && corepack pnpm --filter @codelinks/admin-link dev --host 0.0.0.0 --port 5178"
+    environment:
+      AUTH_API_BASE_URL: http://auth-service:8080
+      AUTH_FRONTEND_LOGIN_URL: http://auth.codelinks.localhost/login
+    ports:
+      - "5178:5178"
+    volumes:
+      - ../..:/workspace
+
   infra-link-web:
     image: node:24-alpine
     working_dir: /workspace
@@ -132,6 +143,7 @@ services:
     depends_on:
       - code-links-web
       - auth-frontend
+      - admin-link-web
       - infra-link-web
       - planer-link-web
       - loka-link-web

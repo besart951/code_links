@@ -13,9 +13,9 @@
 		"test:frontend": "pnpm -r --if-present test",
 		"test:e2e": "pnpm --filter code-links test:e2e",
 		"build": "pnpm -r --if-present build && pnpm go:build",
-		"go:test": "go test ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/productauth/...",
-		"go:build": "pnpm go:test && go build ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/productauth/...",
-		"go:fmt": "gofmt -w apps/*/backend packages/productauth",
+		"go:test": "go test ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/productauth/... ./packages/productcatalog/... ./packages/productserver/...",
+		"go:build": "pnpm go:test && go build ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/productauth/... ./packages/productcatalog/... ./packages/productserver/...",
+		"go:fmt": "gofmt -w apps/*/backend packages/productauth packages/productcatalog packages/productserver",
 		"compose:dev": "docker compose up --build"
 	},
 	"devDependencies": {

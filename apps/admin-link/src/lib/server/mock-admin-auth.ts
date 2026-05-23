@@ -1,8 +1,9 @@
+import { isAdminRole } from '@codelinks/config/admin-access';
 import { permissionsForRoles } from '$lib/domain/admin-access/permissions';
 import type { AdminActor, AdminRole } from '$lib/domain/admin-access/types';
 
 function normalizeRole(value: string | null): AdminRole {
-	if (value === 'support' || value === 'auditor' || value === 'admin') {
+	if (value && isAdminRole(value)) {
 		return value;
 	}
 

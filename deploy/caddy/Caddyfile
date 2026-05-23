@@ -12,6 +12,10 @@ http://auth.codelinks.localhost {
 	reverse_proxy auth-frontend:5174
 }
 
+http://admin-link.codelinks.localhost {
+	reverse_proxy admin-link-web:5178
+}
+
 http://infra-link.codelinks.localhost {
 	handle /api/* {
 		reverse_proxy infra-link-api:8091

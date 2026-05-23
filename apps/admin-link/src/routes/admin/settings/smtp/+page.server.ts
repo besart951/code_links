@@ -1,15 +1,16 @@
 import { fail } from '@sveltejs/kit';
 import { hasPermission } from '$lib/domain/admin-access/permissions';
 import type { SmtpEncryption } from '$lib/domain/smtp/types';
-import { adminContainer } from '$lib/server/admin-container';
+import { createAdminContainer } from '$lib/server/admin-container';
 import { requireAdmin } from '$lib/server/auth';
 
 function parseEncryption(value: string): SmtpEncryption {
 	return value === 'none' || value === 'ssl' || value === 'tls' || value === 'starttls' ? value : 'starttls';
 }
 
-export async function load({ locals }) {
-	const admin = requireAdmin(locals);
+export async function load(event) {
+	const admin = requireAdmin(event.locals);
+	const adminContainer = createAdminContainer(event);
 
 	return {
 		settings: await adminContainer.getSmtpSettings.execute(admin),
@@ -18,9 +19,10 @@ export async function load({ locals }) {
 }
 
 export const actions = {
-	save: async ({ request, locals }) => {
-		const admin = requireAdmin(locals);
-		const formData = await request.formData();
+	save: async (event) => {
+		const admin = requireAdmin(event.locals);
+		const adminContainer = createAdminContainer(event);
+		const formData = await event.request.formData();
 		const host = String(formData.get('host') ?? '').trim();
 		const port = Number(formData.get('port') ?? 0);
 		const fromEmail = String(formData.get('fromEmail') ?? '').trim();
@@ -44,9 +46,10 @@ export const actions = {
 
 		return { ok: true, message: 'SMTP-Einstellungen gespeichert.' };
 	},
-	testEmail: async ({ request, locals }) => {
-		const admin = requireAdmin(locals);
-		const formData = await request.formData();
+	testEmail: async (event) => {
+		const admin = requireAdmin(event.locals);
+		const adminContainer = createAdminContainer(event);
+		const formData = await event.request.formData();
 		const recipient = String(formData.get('recipient') ?? '').trim();
 
 		if (!recipient) {

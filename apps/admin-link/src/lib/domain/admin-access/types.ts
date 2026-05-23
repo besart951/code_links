@@ -1,17 +1,6 @@
-export type AdminRole = 'admin' | 'support' | 'auditor';
+import type { AdminPermission, AdminRole } from '@codelinks/config/admin-access';
 
-export type AdminPermission =
-	| 'admin.dashboard.read'
-	| 'admin.users.read'
-	| 'admin.users.update'
-	| 'admin.users.change_role'
-	| 'admin.auth_logs.read'
-	| 'admin.security_events.read'
-	| 'admin.users.lock'
-	| 'admin.smtp_settings.read'
-	| 'admin.smtp_settings.update'
-	| 'admin.notifications.read'
-	| 'admin.audit_entries.read';
+export type { AdminPermission, AdminRole };
 
 export interface AdminActor {
 	id: string;

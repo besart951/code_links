@@ -11,13 +11,11 @@ export class AuthServiceAdminApiRepository implements AdminReadRepository {
 	constructor(
 		private readonly baseUrl: string,
 		private readonly fetchImpl: typeof fetch,
-		private readonly accessToken: string
+		private readonly requestHeaders: Record<string, string>
 	) {}
 
 	private async getJson<T>(path: string): Promise<T> {
-		const response = await this.fetchImpl(`${this.baseUrl}${path}`, {
-			headers: { Authorization: `Bearer ${this.accessToken}` }
-		});
+		const response = await this.fetchImpl(`${this.baseUrl}${path}`, { headers: this.requestHeaders });
 
 		if (!response.ok) {
 			throw new Error(`Admin API request failed: ${response.status}`);
@@ -102,7 +100,7 @@ export class AuthServiceAdminApiRepository implements AdminReadRepository {
 		const response = await this.fetchImpl(`${this.baseUrl}/api/admin/settings/smtp`, {
 			method: 'PUT',
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				...this.requestHeaders,
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify(input)
@@ -119,7 +117,7 @@ export class AuthServiceAdminApiRepository implements AdminReadRepository {
 		const response = await this.fetchImpl(`${this.baseUrl}/api/admin/settings/smtp/test-email`, {
 			method: 'POST',
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				...this.requestHeaders,
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify({ recipient })
@@ -134,7 +132,7 @@ export class AuthServiceAdminApiRepository implements AdminReadRepository {
 		const response = await this.fetchImpl(`${this.baseUrl}/api/admin/users/${userId}/status`, {
 			method: 'PATCH',
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				...this.requestHeaders,
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify({ status })
@@ -149,7 +147,7 @@ export class AuthServiceAdminApiRepository implements AdminReadRepository {
 		const response = await this.fetchImpl(`${this.baseUrl}/api/admin/users/${userId}/role`, {
 			method: 'PATCH',
 			headers: {
-				Authorization: `Bearer ${this.accessToken}`,
+				...this.requestHeaders,
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify({ role })

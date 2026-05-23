@@ -5,7 +5,10 @@
 	"type": "module",
 	"exports": {
 		"./typescript": "./tsconfig.base.json",
-		"./products": "./products.ts"
+		"./products": "./products.ts",
+		"./products.json": "./products.json",
+		"./admin-access": "./admin-access.ts",
+		"./admin-access.json": "./admin-access.json"
 	},
 	"devDependencies": {
 		"typescript": "^6.0.3"

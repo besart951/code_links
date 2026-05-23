@@ -1,22 +1,24 @@
-export const products = [
+import catalog from './products.json';
+
+export const products = catalog as unknown as readonly [
 	{
-		id: 'infra-link',
-		name: 'Infra Link',
-		appUrl: 'http://infra-link.codelinks.localhost',
-		descriptionKey: 'products.infraLink.description'
+		id: 'infra-link';
+		name: 'Infra Link';
+		appUrl: 'http://infra-link.codelinks.localhost';
+		descriptionKey: 'products.infraLink.description';
 	},
 	{
-		id: 'planer-link',
-		name: 'Planer Link',
-		appUrl: 'http://planer-link.codelinks.localhost',
-		descriptionKey: 'products.planerLink.description'
+		id: 'planer-link';
+		name: 'Planer Link';
+		appUrl: 'http://planer-link.codelinks.localhost';
+		descriptionKey: 'products.planerLink.description';
 	},
 	{
-		id: 'loka-link',
-		name: 'Loka Link',
-		appUrl: 'http://loka-link.codelinks.localhost',
-		descriptionKey: 'products.lokaLink.description'
+		id: 'loka-link';
+		name: 'Loka Link';
+		appUrl: 'http://loka-link.codelinks.localhost';
+		descriptionKey: 'products.lokaLink.description';
 	}
-] as const;
+];
 
 export type ProductId = (typeof products)[number]['id'];

@@ -21,15 +21,19 @@
 				<Table.Head>Actor</Table.Head>
 				<Table.Head>Aktion</Table.Head>
 				<Table.Head>Ziel</Table.Head>
+				<Table.Head>Grund</Table.Head>
+				<Table.Head>IP</Table.Head>
 				<Table.Head>Zeitpunkt</Table.Head>
 			</Table.Row>
 		</Table.Header>
 		<Table.Body>
 			{#each data.entries as entry (entry.id)}
 				<Table.Row>
-					<Table.Cell>{entry.actor}</Table.Cell>
+					<Table.Cell class="font-mono text-xs">{entry.actorUserId}</Table.Cell>
 					<Table.Cell>{entry.action}</Table.Cell>
-					<Table.Cell>{entry.target}</Table.Cell>
+					<Table.Cell>{entry.targetType}:{entry.targetId}</Table.Cell>
+					<Table.Cell>{entry.reason || '-'}</Table.Cell>
+					<Table.Cell class="font-mono text-xs">{entry.ipAddress || '-'}</Table.Cell>
 					<Table.Cell>{new Date(entry.createdAt).toLocaleString('de-DE')}</Table.Cell>
 				</Table.Row>
 			{/each}

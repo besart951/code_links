@@ -35,7 +35,12 @@ type NotificationStore interface {
 }
 
 type AuditStore interface {
+	ListAdminAuditEntries(ctx context.Context, limit int) ([]AdminAuditEntry, error)
 	RecordAdminAuditEntry(ctx context.Context, entry AdminAuditEntry) error
+}
+
+type RuntimeLogReader interface {
+	ListRuntimeLogs(ctx context.Context, limit int) ([]RuntimeLogEntry, error)
 }
 
 type SessionStore interface {
@@ -56,19 +61,21 @@ type Service struct {
 	settings      SettingsStore
 	notifications NotificationStore
 	audit         AuditStore
+	runtimeLogs   RuntimeLogReader
 	sessions      SessionStore
 	tokens        TokenParser
 	emailSender   appmail.Sender
 	projection    AdminProjectionPolicy
 }
 
-func NewService(config Config, store Store, settings SettingsStore, notifications NotificationStore, audit AuditStore, sessions SessionStore, tokens TokenParser, emailSender appmail.Sender) *Service {
+func NewService(config Config, store Store, settings SettingsStore, notifications NotificationStore, audit AuditStore, runtimeLogs RuntimeLogReader, sessions SessionStore, tokens TokenParser, emailSender appmail.Sender) *Service {
 	return &Service{
 		config:        config,
 		store:         store,
 		settings:      settings,
 		notifications: notifications,
 		audit:         audit,
+		runtimeLogs:   runtimeLogs,
 		sessions:      sessions,
 		tokens:        tokens,
 		emailSender:   emailSender,
@@ -250,6 +257,22 @@ func (s *Service) ListNotifications(ctx context.Context, limit int) ([]Notificat
 		return nil, serviceError(KindInternal, "could not load notifications")
 	}
 	return notifications, nil
+}
+
+func (s *Service) ListAuditEntries(ctx context.Context, limit int) ([]AdminAuditEntry, error) {
+	entries, err := s.audit.ListAdminAuditEntries(ctx, limit)
+	if err != nil {
+		return nil, serviceError(KindInternal, "could not load audit entries")
+	}
+	return entries, nil
+}
+
+func (s *Service) ListRuntimeLogs(ctx context.Context, limit int) ([]RuntimeLogEntry, error) {
+	entries, err := s.runtimeLogs.ListRuntimeLogs(ctx, limit)
+	if err != nil {
+		return nil, serviceError(KindInternal, "could not load runtime logs")
+	}
+	return entries, nil
 }
 
 func (s *Service) SMTPSettings(ctx context.Context) (SmtpSettings, error) {

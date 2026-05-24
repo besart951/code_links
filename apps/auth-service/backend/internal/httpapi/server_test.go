@@ -234,6 +234,36 @@ func TestSMTPSettingsAreEncryptedAndSupportCannotUpdate(t *testing.T) {
 		t.Fatalf("expected smtp test 200, got %d: %s", testEmailRecorder.Code, testEmailRecorder.Body.String())
 	}
 
+	auditRequest := httptest.NewRequest(http.MethodGet, "/api/admin/audit-entries", nil)
+	auditRequest.Header.Set("Authorization", "Bearer "+adminLogin.AccessToken)
+	auditRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(auditRecorder, auditRequest)
+	if auditRecorder.Code != http.StatusOK {
+		t.Fatalf("expected audit entries 200, got %d: %s", auditRecorder.Code, auditRecorder.Body.String())
+	}
+	var auditEntries []domain.AdminAuditEntry
+	if err := json.NewDecoder(auditRecorder.Body).Decode(&auditEntries); err != nil {
+		t.Fatal(err)
+	}
+	if len(auditEntries) < 2 {
+		t.Fatalf("expected smtp audit entries, got %d", len(auditEntries))
+	}
+
+	runtimeRequest := httptest.NewRequest(http.MethodGet, "/api/admin/runtime-logs", nil)
+	runtimeRequest.Header.Set("Authorization", "Bearer "+adminLogin.AccessToken)
+	runtimeRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(runtimeRecorder, runtimeRequest)
+	if runtimeRecorder.Code != http.StatusOK {
+		t.Fatalf("expected runtime logs 200, got %d: %s", runtimeRecorder.Code, runtimeRecorder.Body.String())
+	}
+	var runtimeEntries []domain.RuntimeLogEntry
+	if err := json.NewDecoder(runtimeRecorder.Body).Decode(&runtimeEntries); err != nil {
+		t.Fatal(err)
+	}
+	if len(runtimeEntries) != 1 || runtimeEntries[0].Source != "auth-service" {
+		t.Fatalf("unexpected runtime logs: %#v", runtimeEntries)
+	}
+
 	supportLogin := loginAndDecode(t, server, "support@codelinks.dev", "password")
 	supportUpdate := httptest.NewRequest(http.MethodPut, "/api/admin/settings/smtp", bytes.NewBufferString(`{"host":"smtp.example.com","port":587,"encryption":"starttls","fromEmail":"no-reply@example.com","fromName":"CodeLinks","replyToEmail":"support@example.com","active":true}`))
 	supportUpdate.Header.Set("Authorization", "Bearer "+supportLogin.AccessToken)
@@ -345,6 +375,21 @@ type testServer struct {
 	smtpSecretKey []byte
 }
 
+type staticRuntimeLogs struct{}
+
+func (staticRuntimeLogs) ListRuntimeLogs(context.Context, int) ([]domain.RuntimeLogEntry, error) {
+	return []domain.RuntimeLogEntry{
+		{
+			ID:         "runtime-1",
+			OccurredAt: time.Now().UTC(),
+			Level:      "info",
+			Source:     "auth-service",
+			Message:    "auth-service listening on :8080",
+			Raw:        "auth-service listening on :8080",
+		},
+	}, nil
+}
+
 func (s *testServer) routes() http.Handler {
 	return s.Handler()
 }
@@ -379,7 +424,7 @@ func newTestServerWithMockPurchase(t *testing.T, enableMockPurchase bool) *testS
 	}, store, store, store, signer)
 	adminService := adminsvc.NewService(adminsvc.Config{
 		SMTPSecretKey: key[:],
-	}, store, store, store, store, store, signer, appmail.NoopSender{})
+	}, store, store, store, store, staticRuntimeLogs{}, store, signer, appmail.NoopSender{})
 	server := NewServer(Config{
 		EnableMockPurchase: enableMockPurchase,
 		PublicFrontendURL:  "http://auth.codelinks.localhost",

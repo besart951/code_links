@@ -1,11 +1,13 @@
 import { error } from '@sveltejs/kit';
 import type { AdminRepository } from '$lib/application/ports/AdminRepository';
+import type { AdminAuditEntry } from '$lib/domain/audit/types';
 import type { LoginAttempt, LoginAttemptQuery } from '$lib/domain/auth-logs/types';
 import type { Paginated } from '$lib/domain/shared/pagination';
 import type { DashboardSummary } from '$lib/domain/statistics/types';
 import type { ManagedUserDetail, UserListItem, UserListQuery, UserStatus } from '$lib/domain/users/types';
 import type { SecurityEvent } from '$lib/domain/security/types';
 import type { Notification } from '$lib/domain/notifications/types';
+import type { RuntimeLogEntry } from '$lib/domain/runtime-logs/types';
 import type { SmtpSettings, UpdateSmtpSettingsInput } from '$lib/domain/smtp/types';
 
 const users: UserListItem[] = [
@@ -204,6 +206,48 @@ const notifications: Notification[] = [
 	}
 ];
 
+const auditEntries: AdminAuditEntry[] = [
+	{
+		id: 'audit_001',
+		actorUserId: 'usr_anna',
+		action: 'admin.users.lock',
+		targetType: 'user',
+		targetId: 'usr_lena',
+		reason: 'suspicious_failed_logins',
+		ipAddress: '203.0.113.18',
+		createdAt: '2026-05-22T09:01:00.000Z'
+	},
+	{
+		id: 'audit_002',
+		actorUserId: 'usr_anna',
+		action: 'admin.smtp_settings.test_email',
+		targetType: 'smtp_settings',
+		targetId: 'default',
+		reason: 'admin@example.com',
+		ipAddress: '203.0.113.18',
+		createdAt: '2026-05-21T14:12:04.000Z'
+	}
+];
+
+const runtimeLogs: RuntimeLogEntry[] = [
+	{
+		id: 'runtime_001',
+		occurredAt: '2026-05-22T09:04:00.000Z',
+		level: 'info',
+		source: 'auth-service',
+		message: 'auth-service listening on :8080',
+		raw: '2026/05/22 09:04:00.000000 auth-service listening on :8080'
+	},
+	{
+		id: 'runtime_002',
+		occurredAt: '2026-05-22T09:05:00.000Z',
+		level: 'fatal',
+		source: 'auth-service',
+		message: 'fatal: database unavailable',
+		raw: '2026/05/22 09:05:00.000000 fatal: database unavailable'
+	}
+];
+
 let smtpSettings: SmtpSettings = {
 	host: 'smtp.example.com',
 	port: 587,
@@ -362,6 +406,14 @@ export class MockAdminRepository implements AdminRepository {
 
 	async listNotifications() {
 		return notifications;
+	}
+
+	async listAuditEntries() {
+		return auditEntries;
+	}
+
+	async listRuntimeLogs() {
+		return runtimeLogs;
 	}
 
 	async getSmtpSettings() {

@@ -36,7 +36,7 @@ func TestServicePermissionAndSMTPFlow(t *testing.T) {
 	email := &spySender{}
 	adminService := NewService(Config{
 		SMTPSecretKey: []byte("01234567890123456789012345678901"),
-	}, store, store, store, store, store, signer, email)
+	}, store, store, store, store, staticRuntimeLogs{}, store, signer, email)
 
 	support, err := authService.Login(ctx, authsvc.LoginInput{Email: "support@codelinks.dev", Password: "password"})
 	if err != nil {
@@ -78,6 +78,12 @@ func TestServicePermissionAndSMTPFlow(t *testing.T) {
 	if email.password != "smtp-secret" || email.message.To != "admin@example.com" {
 		t.Fatalf("unexpected test email call: %#v password=%q", email.message, email.password)
 	}
+}
+
+type staticRuntimeLogs struct{}
+
+func (staticRuntimeLogs) ListRuntimeLogs(context.Context, int) ([]domain.RuntimeLogEntry, error) {
+	return []domain.RuntimeLogEntry{}, nil
 }
 
 type spySender struct {

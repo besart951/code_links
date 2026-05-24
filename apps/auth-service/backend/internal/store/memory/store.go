@@ -650,6 +650,21 @@ func (s *Store) RecordAdminAuditEntry(_ context.Context, entry AdminAuditEntry) 
 	return nil
 }
 
+func (s *Store) ListAdminAuditEntries(_ context.Context, limit int) ([]AdminAuditEntry, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	entries := append([]AdminAuditEntry{}, s.auditEntries...)
+	sort.SliceStable(entries, func(i, j int) bool {
+		return entries[i].CreatedAt.After(entries[j].CreatedAt)
+	})
+	if limit > 0 && len(entries) > limit {
+		entries = entries[:limit]
+	}
+
+	return entries, nil
+}
+
 func (s *Store) putUserLocked(user User) {
 	s.usersByID[user.ID] = user
 	s.usersByEmail[normalizeEmail(user.Email)] = user.ID

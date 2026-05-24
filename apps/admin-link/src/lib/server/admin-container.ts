@@ -1,6 +1,8 @@
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
 import type { RequestEvent } from '@sveltejs/kit';
+import { ListActivityEventsUseCase } from '$lib/application/activity/ListActivityEventsUseCase';
+import { ListAuditEntriesUseCase } from '$lib/application/audit/ListAuditEntriesUseCase';
 import { GetDashboardSummaryUseCase } from '$lib/application/dashboard/GetDashboardSummaryUseCase';
 import { ListLoginAttemptsUseCase } from '$lib/application/login-statistics/ListLoginAttemptsUseCase';
 import { ListNotificationsUseCase } from '$lib/application/notifications/ListNotificationsUseCase';
@@ -46,6 +48,8 @@ export function createAdminContainer(event: RequestEvent) {
 		listLoginAttempts: new ListLoginAttemptsUseCase(repositories.query),
 		listSecurityEvents: new ListSecurityEventsUseCase(repositories.query),
 		listNotifications: new ListNotificationsUseCase(repositories.query),
+		listAuditEntries: new ListAuditEntriesUseCase(repositories.query),
+		listActivityEvents: new ListActivityEventsUseCase(repositories.query),
 		getSmtpSettings: new GetSmtpSettingsUseCase(repositories.query),
 		updateSmtpSettings: new UpdateSmtpSettingsUseCase(repositories.command),
 		sendTestEmail: new SendTestEmailUseCase(repositories.command),

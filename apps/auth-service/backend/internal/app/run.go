@@ -12,6 +12,7 @@ import (
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/config"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/httpapi"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/mail"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/processlog"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/memory"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/postgres"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/token"
@@ -30,6 +31,11 @@ type store interface {
 
 func Run(ctx context.Context) error {
 	cfg := config.Load()
+	closeLog, err := processlog.Configure(cfg.RuntimeLogFile)
+	if err != nil {
+		return err
+	}
+	defer closeLog()
 
 	signer, err := token.NewSigner(token.Config{
 		KeyID:          cfg.JWTKeyID,
@@ -56,7 +62,7 @@ func Run(ctx context.Context) error {
 	}, store, store, store, signer)
 	adminService := admin.NewService(admin.Config{
 		SMTPSecretKey: cfg.SMTPSecretKey,
-	}, store, store, store, store, store, signer, mail.SmtpSender{})
+	}, store, store, store, store, processlog.Reader{Path: cfg.RuntimeLogFile}, store, signer, mail.SmtpSender{})
 	server := httpapi.NewServer(httpapi.Config{
 		AllowedOrigins:     cfg.AllowedOrigins,
 		EnableMockPurchase: cfg.EnableMockPurchase,

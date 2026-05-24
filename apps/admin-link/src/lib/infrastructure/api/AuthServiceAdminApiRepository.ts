@@ -1,9 +1,11 @@
 import type { AdminRepository } from '$lib/application/ports/AdminRepository';
+import type { AdminAuditEntry } from '$lib/domain/audit/types';
 import type { LoginAttempt, LoginAttemptQuery } from '$lib/domain/auth-logs/types';
 import type { SecurityEvent } from '$lib/domain/security/types';
 import type { Paginated } from '$lib/domain/shared/pagination';
 import type { DashboardSummary } from '$lib/domain/statistics/types';
 import type { Notification } from '$lib/domain/notifications/types';
+import type { RuntimeLogEntry } from '$lib/domain/runtime-logs/types';
 import type { SmtpSettings, UpdateSmtpSettingsInput } from '$lib/domain/smtp/types';
 import type { ManagedUserDetail, UserListItem, UserListQuery, UserStatus } from '$lib/domain/users/types';
 
@@ -90,6 +92,14 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 
 	listNotifications() {
 		return this.getJson<Notification[]>('/api/admin/notifications');
+	}
+
+	listAuditEntries() {
+		return this.getJson<AdminAuditEntry[]>('/api/admin/audit-entries');
+	}
+
+	listRuntimeLogs() {
+		return this.getJson<RuntimeLogEntry[]>('/api/admin/runtime-logs');
 	}
 
 	getSmtpSettings() {

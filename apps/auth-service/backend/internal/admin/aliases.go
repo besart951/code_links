@@ -16,6 +16,7 @@ type LoginAttemptListQuery = domain.LoginAttemptListQuery
 type LoginAttemptListResult = domain.LoginAttemptListResult
 type ManagedUserDetail = domain.ManagedUserDetail
 type Notification = domain.Notification
+type RuntimeLogEntry = domain.RuntimeLogEntry
 type SecurityEvent = domain.SecurityEvent
 type SmtpEncryption = domain.SmtpEncryption
 type SmtpSettings = domain.SmtpSettings

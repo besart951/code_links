@@ -25,6 +25,8 @@ func (s *Server) registerAdminRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/admin/login-attempts", s.handleAdminLoginAttempts)
 	mux.HandleFunc("GET /api/admin/security-events", s.handleAdminSecurityEvents)
 	mux.HandleFunc("GET /api/admin/notifications", s.handleAdminNotifications)
+	mux.HandleFunc("GET /api/admin/audit-entries", s.handleAdminAuditEntries)
+	mux.HandleFunc("GET /api/admin/runtime-logs", s.handleAdminRuntimeLogs)
 	mux.HandleFunc("GET /api/admin/settings/smtp", s.handleAdminGetSMTPSettings)
 	mux.HandleFunc("PUT /api/admin/settings/smtp", s.handleAdminUpdateSMTPSettings)
 	mux.HandleFunc("POST /api/admin/settings/smtp/test-email", s.handleAdminSendTestEmail)
@@ -228,6 +230,30 @@ func (s *Server) handleAdminNotifications(w http.ResponseWriter, r *http.Request
 		return
 	}
 	writeJSON(w, http.StatusOK, notifications)
+}
+
+func (s *Server) handleAdminAuditEntries(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.requireAdmin(w, r, domain.PermissionAuditEntriesRead); !ok {
+		return
+	}
+	entries, err := s.admin.ListAuditEntries(r.Context(), queryInt(r, "limit", 50))
+	if err != nil {
+		writeAdminError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, entries)
+}
+
+func (s *Server) handleAdminRuntimeLogs(w http.ResponseWriter, r *http.Request) {
+	if _, ok := s.requireAdmin(w, r, domain.PermissionAuditEntriesRead); !ok {
+		return
+	}
+	entries, err := s.admin.ListRuntimeLogs(r.Context(), queryInt(r, "limit", 100))
+	if err != nil {
+		writeAdminError(w, err)
+		return
+	}
+	writeJSON(w, http.StatusOK, entries)
 }
 
 func (s *Server) handleAdminGetSMTPSettings(w http.ResponseWriter, r *http.Request) {

@@ -21,6 +21,7 @@ type Config struct {
 	PublicFrontendURL    string
 	AllowedOrigins       []string
 	EnableMockPurchase   bool
+	RuntimeLogFile       string
 	AccessTokenLifetime  time.Duration
 	RefreshTokenLifetime time.Duration
 	JWTKeyID             string
@@ -45,6 +46,7 @@ func Load() Config {
 		PublicFrontendURL:    env("PUBLIC_AUTH_FRONTEND_URL", "http://auth.codelinks.localhost"),
 		AllowedOrigins:       splitCSV(env("ALLOWED_ORIGINS", "http://code-links.codelinks.localhost,http://admin-link.codelinks.localhost,http://auth.codelinks.localhost,http://localhost:5173,http://localhost:5174,http://localhost:5175")),
 		EnableMockPurchase:   os.Getenv("ENABLE_MOCK_PURCHASE") == "true",
+		RuntimeLogFile:       env("AUTH_SERVICE_LOG_FILE", "logs/auth-service.log"),
 		AccessTokenLifetime:  15 * time.Minute,
 		RefreshTokenLifetime: 30 * 24 * time.Hour,
 		JWTKeyID:             env("JWT_KEY_ID", "dev-key"),
@@ -58,7 +60,7 @@ func smtpSecretKey(environment string) []byte {
 	raw := os.Getenv("SMTP_SECRET_KEY")
 	if raw == "" {
 		if environment == "production" {
-			log.Fatal("SMTP_SECRET_KEY must be set in production")
+			log.Fatal("fatal: SMTP_SECRET_KEY must be set in production")
 		}
 		sum := sha256.Sum256([]byte("codelinks-dev-smtp-secret"))
 		return sum[:]

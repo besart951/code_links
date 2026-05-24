@@ -11,7 +11,8 @@
 		if (page.url.pathname === '/admin') return 'Dashboard';
 		if (page.url.pathname.startsWith('/admin/users')) return 'Benutzerverwaltung';
 		if (page.url.pathname.startsWith('/admin/failed-logins')) return 'Fehlgeschlagene Logins';
-		if (page.url.pathname.startsWith('/admin/logs') || page.url.pathname.startsWith('/admin/login-history')) return 'Login-Historie';
+		if (page.url.pathname.startsWith('/admin/logs')) return 'Alle Logs';
+		if (page.url.pathname.startsWith('/admin/login-history')) return 'Login-Historie';
 		if (page.url.pathname.startsWith('/admin/security')) return 'Security Events';
 		if (page.url.pathname.startsWith('/admin/notifications')) return 'Benachrichtigungen';
 		if (page.url.pathname.startsWith('/admin/settings/smtp')) return 'SMTP-Konfiguration';

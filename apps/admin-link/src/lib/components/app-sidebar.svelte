@@ -1,6 +1,7 @@
 <script lang="ts">
 	import AlertTriangleIcon from '@tabler/icons-svelte/icons/alert-triangle';
 	import ChartBarIcon from '@tabler/icons-svelte/icons/chart-bar';
+	import ClipboardListIcon from '@tabler/icons-svelte/icons/clipboard-list';
 	import DashboardIcon from '@tabler/icons-svelte/icons/dashboard';
 	import HistoryIcon from '@tabler/icons-svelte/icons/history';
 	import LockIcon from '@tabler/icons-svelte/icons/lock';
@@ -31,6 +32,7 @@
 	const items: NavItem[] = [
 		{ title: 'Übersicht', url: '/admin', icon: DashboardIcon, permission: 'admin.dashboard.read' },
 		{ title: 'Benutzer', url: '/admin/users', icon: UsersIcon, permission: 'admin.users.read' },
+		{ title: 'Alle Logs', url: '/admin/logs', icon: ClipboardListIcon, permission: 'admin.auth_logs.read' },
 		{ title: 'Login-Historie', url: '/admin/login-history', icon: HistoryIcon, permission: 'admin.auth_logs.read' },
 		{ title: 'Fehlgeschlagen', url: '/admin/failed-logins', icon: AlertTriangleIcon, permission: 'admin.auth_logs.read' },
 		{ title: 'Security', url: '/admin/security', icon: ShieldLockIcon, permission: 'admin.security_events.read' },

@@ -110,3 +110,27 @@ func (s *Store) RecordAdminAuditEntry(ctx context.Context, entry AdminAuditEntry
 
 	return err
 }
+
+func (s *Store) ListAdminAuditEntries(ctx context.Context, limit int) ([]AdminAuditEntry, error) {
+	rows, err := s.pool.Query(ctx, `
+		select id, actor_user_id, action, target_type, target_id, coalesce(reason, ''), coalesce(ip_address::text, ''), created_at
+		from admin_audit_entries
+		order by created_at desc
+		limit $1
+	`, normalizedLimit(limit))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	entries := []AdminAuditEntry{}
+	for rows.Next() {
+		var entry AdminAuditEntry
+		if err := rows.Scan(&entry.ID, &entry.ActorUserID, &entry.Action, &entry.TargetType, &entry.TargetID, &entry.Reason, &entry.IPAddress, &entry.CreatedAt); err != nil {
+			return nil, err
+		}
+		entries = append(entries, entry)
+	}
+
+	return entries, rows.Err()
+}

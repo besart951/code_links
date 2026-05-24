@@ -1,19 +1,11 @@
-import { requirePermission } from '$lib/application/admin-access/requirePermission';
+import { createAdminContainer } from '$lib/server/admin-container';
 import { requireAdmin } from '$lib/server/auth';
 
-export function load({ locals }) {
-	const admin = requireAdmin(locals);
-	requirePermission(admin, 'admin.audit_entries.read');
+export async function load(event) {
+	const admin = requireAdmin(event.locals);
+	const adminContainer = createAdminContainer(event);
 
 	return {
-		entries: [
-			{
-				id: 'audit_001',
-				actor: 'CodeLinks Admin',
-				action: 'user.status.lock',
-				target: 'lena.schneider@example.com',
-				createdAt: '2026-05-22T09:01:00.000Z'
-			}
-		]
+		entries: await adminContainer.listAuditEntries.execute(admin)
 	};
 }

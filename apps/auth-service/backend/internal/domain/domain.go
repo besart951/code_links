@@ -214,6 +214,15 @@ type AdminAuditEntry struct {
 	CreatedAt   time.Time `json:"createdAt"`
 }
 
+type RuntimeLogEntry struct {
+	ID         string    `json:"id"`
+	OccurredAt time.Time `json:"occurredAt"`
+	Level      string    `json:"level"`
+	Source     string    `json:"source"`
+	Message    string    `json:"message"`
+	Raw        string    `json:"raw"`
+}
+
 type DashboardStats struct {
 	Users struct {
 		Total         int `json:"total"`

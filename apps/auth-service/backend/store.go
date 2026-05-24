@@ -823,84 +823,12 @@ func (s *memoryStore) detectSecurityEventsLocked(attempt LoginAttempt) {
 	}
 }
 
-func permissionsForRoles(roles []AdminRole) []AdminPermission {
-	grants := map[AdminPermission]bool{}
-	for _, role := range roles {
-		for _, permission := range permissionsByRole(role) {
-			grants[permission] = true
-		}
-	}
-
-	permissions := make([]AdminPermission, 0, len(grants))
-	for permission := range grants {
-		permissions = append(permissions, permission)
-	}
-	sort.Slice(permissions, func(i, j int) bool { return permissions[i] < permissions[j] })
-
-	return permissions
-}
-
-func permissionsByRole(role AdminRole) []AdminPermission {
-	switch role {
-	case AdminRoleAdmin:
-		return []AdminPermission{
-			PermissionDashboardRead,
-			PermissionUsersRead,
-			PermissionUsersUpdate,
-			PermissionUsersLock,
-			PermissionUsersChangeRole,
-			PermissionAuthLogsRead,
-			PermissionSecurityEventsRead,
-			PermissionSMTPSettingsRead,
-			PermissionSMTPSettingsUpdate,
-			PermissionNotificationsRead,
-			PermissionAuditEntriesRead,
-		}
-	case AdminRoleSupport:
-		return []AdminPermission{
-			PermissionDashboardRead,
-			PermissionUsersRead,
-			PermissionUsersUpdate,
-			PermissionUsersLock,
-			PermissionAuthLogsRead,
-			PermissionSecurityEventsRead,
-			PermissionNotificationsRead,
-		}
-	case AdminRoleAuditor:
-		return []AdminPermission{
-			PermissionDashboardRead,
-			PermissionAuthLogsRead,
-			PermissionSecurityEventsRead,
-			PermissionNotificationsRead,
-			PermissionAuditEntriesRead,
-		}
-	default:
-		return nil
-	}
-}
-
 func normalizeEmail(email string) string {
 	return strings.ToLower(strings.TrimSpace(email))
 }
 
 func validUserStatus(status UserStatus) bool {
 	return status == UserStatusActive || status == UserStatusDisabled || status == UserStatusLocked
-}
-
-func validAdminRole(role AdminRole) bool {
-	return role == AdminRoleAdmin || role == AdminRoleSupport || role == AdminRoleAuditor || role == AdminRoleUser
-}
-
-func primaryRole(roles []AdminRole) AdminRole {
-	for _, preferred := range []AdminRole{AdminRoleAdmin, AdminRoleSupport, AdminRoleAuditor, AdminRoleUser} {
-		for _, role := range roles {
-			if role == preferred {
-				return preferred
-			}
-		}
-	}
-
-	return AdminRoleUser
 }
 
 func matchesUserQuery(item AdminUserListItem, query AdminUserListQuery) bool {

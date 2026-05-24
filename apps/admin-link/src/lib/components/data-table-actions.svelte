@@ -1,6 +1,6 @@
 <script lang="ts">
-	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
-	import { Button } from "$lib/components/ui/button/index.js";
+	import * as DropdownMenu from "@codelinks/ui-library/components/ui/dropdown-menu";
+	import { Button } from "@codelinks/ui-library/components/ui/button";
 	import DotsVerticalIcon from "@tabler/icons-svelte/icons/dots-vertical";
 </script>
 

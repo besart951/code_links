@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Card from '@codelinks/ui-library/components/ui/card';
 	import type { DashboardSummary } from '$lib/domain/statistics/types';
 
 	let { trend }: { trend: DashboardSummary['trend'] } = $props();

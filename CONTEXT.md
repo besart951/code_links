@@ -8,6 +8,10 @@ A person who can authenticate with CodeLinks and receive product licenses. A Use
 
 A licensed CodeLinks application, identified by a canonical hyphenated product ID such as `infra-link`, `planer-link`, or `loka-link`.
 
+## Product Catalog
+
+The generated contract listing every canonical Product ID and launch URL. TypeScript UI code and Go Product backend validation consume the Product Catalog instead of hard-coded Product IDs.
+
 ## Product License
 
 A grant that allows a User to open and call one Product. Product Licenses are embedded into Access Tokens so Product backends can authorize requests locally.
@@ -35,6 +39,10 @@ A coarse-grained role such as `admin`, `support`, or `auditor`. Roles are mapped
 ## Permission
 
 A fine-grained capability such as `admin.users.read`, `admin.users.lock`, or `admin.smtp_settings.update`. Admin Console Permissions use the canonical `admin.*` prefix. UI visibility can use Permissions, but the Auth Service and Admin API must enforce them server-side.
+
+## Admin Access Contract
+
+The generated contract mapping Admin Roles to canonical Admin Console Permissions. The Auth Service owns enforcement, while the Admin Console consumes the current Admin Actor Permissions returned by the Auth Service.
 
 ## Login Attempt
 

@@ -260,7 +260,25 @@ func TestMockPurchaseGrantsLicenseAndRefreshesAccessToken(t *testing.T) {
 	}
 }
 
+func TestMockPurchaseRouteRequiresExplicitDevMode(t *testing.T) {
+	server := newTestServerWithMockPurchase(t, false)
+	login := loginAndDecode(t, server, "demo@codelinks.dev", "password")
+
+	purchase := httptest.NewRequest(http.MethodPost, "/api/licenses/mock-purchase", bytes.NewBufferString(`{"productId":"planer-link"}`))
+	purchase.Header.Set("Authorization", "Bearer "+login.AccessToken)
+	recorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(recorder, purchase)
+
+	if recorder.Code != http.StatusNotFound {
+		t.Fatalf("expected disabled mock purchase 404, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+}
+
 func newTestServer(t *testing.T) *server {
+	return newTestServerWithMockPurchase(t, true)
+}
+
+func newTestServerWithMockPurchase(t *testing.T, enableMockPurchase bool) *server {
 	t.Helper()
 
 	store, err := newMemoryStore()
@@ -273,6 +291,7 @@ func newTestServer(t *testing.T) *server {
 		Audience:             "codelinks-products",
 		Environment:          "test",
 		PublicFrontendURL:    "http://auth.codelinks.localhost",
+		EnableMockPurchase:   enableMockPurchase,
 		AccessTokenLifetime:  15 * time.Minute,
 		RefreshTokenLifetime: time.Hour,
 		JWTKeyID:             "test-key",

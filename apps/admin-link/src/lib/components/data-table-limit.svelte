@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Label } from "$lib/components/ui/label/index.js";
-	import { Input } from "$lib/components/ui/input/index.js";
+	import { Label } from "@codelinks/ui-library/components/ui/label";
+	import { Input } from "@codelinks/ui-library/components/ui/input";
 	import { toast } from "svelte-sonner";
 	import type { Row } from "@tanstack/table-core";
 	import type { Schema } from "./schemas.js";

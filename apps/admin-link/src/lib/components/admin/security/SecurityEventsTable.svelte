@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import * as Table from '$lib/components/ui/table/index.js';
+	import { Badge } from '@codelinks/ui-library/components/ui/badge';
+	import * as Table from '@codelinks/ui-library/components/ui/table';
 	import type { SecurityEvent } from '$lib/domain/security/types';
 
 	let { events, maskIp = false }: { events: SecurityEvent[]; maskIp?: boolean } = $props();

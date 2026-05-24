@@ -1,5 +1,5 @@
 <script lang="ts">
-	import * as Table from '$lib/components/ui/table/index.js';
+	import * as Table from '@codelinks/ui-library/components/ui/table';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

@@ -17,10 +17,15 @@ import (
 )
 
 type server struct {
-	config      config
-	store       Store
-	signer      *tokenSigner
-	emailSender EmailSender
+	config            config
+	store             Store
+	authStore         AuthStore
+	adminStore        AdminStore
+	smtpStore         SmtpSettingsStore
+	notificationStore NotificationStore
+	auditStore        AuditStore
+	signer            *tokenSigner
+	emailSender       EmailSender
 }
 
 type loginRequest struct {
@@ -91,13 +96,35 @@ type userResponse struct {
 }
 
 func newServer(config config, store Store, signer *tokenSigner) *server {
-	return &server{config: config, store: store, signer: signer, emailSender: NoopEmailSender{}}
+	return &server{
+		config:            config,
+		store:             store,
+		authStore:         store,
+		adminStore:        store,
+		smtpStore:         store,
+		notificationStore: store,
+		auditStore:        store,
+		signer:            signer,
+		emailSender:       NoopEmailSender{},
+	}
 }
 
 func (s *server) routes() http.Handler {
 	mux := http.NewServeMux()
+	s.registerSystemRoutes(mux)
+	s.registerAuthRoutes(mux)
+	s.registerLicenseRoutes(mux)
+	s.registerAdminRoutes(mux)
+
+	return s.withCORS(mux)
+}
+
+func (s *server) registerSystemRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /.well-known/jwks.json", s.handleJWKS)
 	mux.HandleFunc("GET /api/health", s.handleHealth)
+}
+
+func (s *server) registerAuthRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /api/auth/login", s.handleLogin)
 	mux.HandleFunc("POST /api/auth/signup", s.handleSignup)
 	mux.HandleFunc("POST /api/auth/forgot-password", s.handleForgotPassword)
@@ -105,7 +132,15 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("GET /api/auth/verify-email", s.handleVerifyEmail)
 	mux.HandleFunc("POST /api/auth/refresh", s.handleRefresh)
 	mux.HandleFunc("POST /api/auth/logout", s.handleLogout)
-	mux.HandleFunc("POST /api/licenses/mock-purchase", s.handleMockPurchase)
+}
+
+func (s *server) registerLicenseRoutes(mux *http.ServeMux) {
+	if s.config.EnableMockPurchase {
+		mux.HandleFunc("POST /api/licenses/mock-purchase", s.handleMockPurchase)
+	}
+}
+
+func (s *server) registerAdminRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("GET /api/admin/me", s.handleAdminMe)
 	mux.HandleFunc("GET /api/admin/dashboard/stats", s.handleAdminDashboardStats)
 	mux.HandleFunc("GET /api/admin/dashboard-summary", s.handleAdminDashboardStats)
@@ -122,8 +157,6 @@ func (s *server) routes() http.Handler {
 	mux.HandleFunc("GET /api/admin/settings/smtp", s.handleAdminGetSMTPSettings)
 	mux.HandleFunc("PUT /api/admin/settings/smtp", s.handleAdminUpdateSMTPSettings)
 	mux.HandleFunc("POST /api/admin/settings/smtp/test-email", s.handleAdminSendTestEmail)
-
-	return s.withCORS(mux)
 }
 
 func (s *server) handleHealth(w http.ResponseWriter, _ *http.Request) {
@@ -158,7 +191,7 @@ func (s *server) handleSignup(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.store.CreateUser(r.Context(), request.Name, request.Email, string(passwordHash))
+	user, err := s.authStore.CreateUser(r.Context(), request.Name, request.Email, string(passwordHash))
 	if errors.Is(err, errConflict) {
 		writeError(w, http.StatusConflict, "email already exists")
 		return
@@ -173,13 +206,13 @@ func (s *server) handleSignup(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusInternalServerError, "could not create verification token")
 		return
 	}
-	if err := s.store.CreateEmailVerificationToken(r.Context(), user.ID, hashOpaqueToken(token), time.Now().UTC().Add(24*time.Hour)); err != nil {
+	if err := s.authStore.CreateEmailVerificationToken(r.Context(), user.ID, hashOpaqueToken(token), time.Now().UTC().Add(24*time.Hour)); err != nil {
 		writeError(w, http.StatusInternalServerError, "could not create verification token")
 		return
 	}
 
 	verificationURL := s.config.PublicFrontendURL + "/verify-email?token=" + token
-	_ = s.store.CreateNotification(r.Context(), Notification{
+	_ = s.notificationStore.CreateNotification(r.Context(), Notification{
 		ID:        uuid.New(),
 		Type:      "email_verification",
 		Channel:   "email",
@@ -206,7 +239,7 @@ func (s *server) handleVerifyEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := s.store.VerifyEmailToken(r.Context(), hashOpaqueToken(token), time.Now().UTC())
+	user, err := s.authStore.VerifyEmailToken(r.Context(), hashOpaqueToken(token), time.Now().UTC())
 	if err != nil {
 		writeError(w, http.StatusBadRequest, "invalid or expired token")
 		return
@@ -226,19 +259,19 @@ func (s *server) handleForgotPassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response := map[string]string{"message": "Falls ein Konto mit dieser E-Mail existiert, wurde ein Reset-Link versendet."}
-	user, _, err := s.store.FindUserByEmail(r.Context(), request.Email)
+	user, _, err := s.authStore.FindUserByEmail(r.Context(), request.Email)
 	if err == nil {
 		token, tokenErr := newOpaqueToken()
 		if tokenErr != nil {
 			writeError(w, http.StatusInternalServerError, "could not create reset token")
 			return
 		}
-		if tokenErr := s.store.CreatePasswordResetToken(r.Context(), user.ID, hashOpaqueToken(token), time.Now().UTC().Add(time.Hour)); tokenErr != nil {
+		if tokenErr := s.authStore.CreatePasswordResetToken(r.Context(), user.ID, hashOpaqueToken(token), time.Now().UTC().Add(time.Hour)); tokenErr != nil {
 			writeError(w, http.StatusInternalServerError, "could not create reset token")
 			return
 		}
 		resetURL := s.config.PublicFrontendURL + "/reset-password?token=" + token
-		_ = s.store.CreateNotification(r.Context(), Notification{
+		_ = s.notificationStore.CreateNotification(r.Context(), Notification{
 			ID:        uuid.New(),
 			Type:      "password_reset",
 			Channel:   "email",
@@ -276,7 +309,7 @@ func (s *server) handleResetPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := s.store.ResetPasswordByToken(r.Context(), hashOpaqueToken(request.Token), string(passwordHash), time.Now().UTC()); err != nil {
+	if _, err := s.authStore.ResetPasswordByToken(r.Context(), hashOpaqueToken(request.Token), string(passwordHash), time.Now().UTC()); err != nil {
 		writeError(w, http.StatusBadRequest, "invalid or expired token")
 		return
 	}
@@ -291,7 +324,7 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	email := normalizeEmail(request.Email)
-	user, licenses, err := s.store.FindUserByEmail(r.Context(), email)
+	user, licenses, err := s.authStore.FindUserByEmail(r.Context(), email)
 	if errors.Is(err, errNotFound) {
 		s.recordLoginAttempt(r, nil, email, false, LoginFailureUnknownEmail)
 		writeError(w, http.StatusUnauthorized, "invalid email or password")
@@ -330,15 +363,15 @@ func (s *server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 
 	tokenHash := hashRefreshToken(cookie.Value)
-	userID, err := s.store.FindRefreshSession(r.Context(), tokenHash)
+	userID, err := s.authStore.FindRefreshSession(r.Context(), tokenHash)
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, "invalid refresh token")
 		return
 	}
 
-	_ = s.store.DeleteRefreshSession(r.Context(), tokenHash)
+	_ = s.authStore.DeleteRefreshSession(r.Context(), tokenHash)
 
-	user, licenses, err := s.store.FindUserByID(r.Context(), userID)
+	user, licenses, err := s.authStore.FindUserByID(r.Context(), userID)
 	if err != nil {
 		writeError(w, http.StatusUnauthorized, "invalid refresh token")
 		return
@@ -349,7 +382,7 @@ func (s *server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	if cookie, err := r.Cookie("refresh_token"); err == nil {
-		_ = s.store.DeleteRefreshSession(r.Context(), hashRefreshToken(cookie.Value))
+		_ = s.authStore.DeleteRefreshSession(r.Context(), hashRefreshToken(cookie.Value))
 	}
 
 	http.SetCookie(w, s.refreshCookie("", time.Unix(0, 0)))
@@ -378,13 +411,13 @@ func (s *server) handleMockPurchase(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	licenses, err := s.store.GrantLicense(r.Context(), userID, request.ProductID)
+	licenses, err := s.authStore.GrantLicense(r.Context(), userID, request.ProductID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not grant license")
 		return
 	}
 
-	user, _, err := s.store.FindUserByID(r.Context(), userID)
+	user, _, err := s.authStore.FindUserByID(r.Context(), userID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load user")
 		return
@@ -407,7 +440,7 @@ func (s *server) handleAdminDashboardStats(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	stats, err := s.store.GetDashboardStats(r.Context())
+	stats, err := s.adminStore.GetDashboardStats(r.Context())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load dashboard stats")
 		return
@@ -421,7 +454,7 @@ func (s *server) handleAdminUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := s.store.ListAdminUsers(r.Context(), AdminUserListQuery{
+	result, err := s.adminStore.ListAdminUsers(r.Context(), AdminUserListQuery{
 		Query:     r.URL.Query().Get("query"),
 		Role:      r.URL.Query().Get("role"),
 		Status:    UserStatus(r.URL.Query().Get("status")),
@@ -447,7 +480,7 @@ func (s *server) handleAdminUserDetail(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	user, err := s.store.GetManagedUserDetail(r.Context(), userID)
+	user, err := s.adminStore.GetManagedUserDetail(r.Context(), userID)
 	if errors.Is(err, errNotFound) {
 		writeError(w, http.StatusNotFound, "user not found")
 		return
@@ -474,7 +507,7 @@ func (s *server) handleAdminUpdateUser(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &request) {
 		return
 	}
-	user, err := s.store.SetUserStatus(r.Context(), userID, request.Status)
+	user, err := s.adminStore.SetUserStatus(r.Context(), userID, request.Status)
 	if errors.Is(err, errNotFound) {
 		writeError(w, http.StatusNotFound, "user not found")
 		return
@@ -496,7 +529,7 @@ func (s *server) handleAdminLockUser(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	user, err := s.store.SetUserStatus(r.Context(), userID, UserStatusLocked)
+	user, err := s.adminStore.SetUserStatus(r.Context(), userID, UserStatusLocked)
 	if errors.Is(err, errNotFound) {
 		writeError(w, http.StatusNotFound, "user not found")
 		return
@@ -518,7 +551,7 @@ func (s *server) handleAdminUnlockUser(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	user, err := s.store.SetUserStatus(r.Context(), userID, UserStatusActive)
+	user, err := s.adminStore.SetUserStatus(r.Context(), userID, UserStatusActive)
 	if errors.Is(err, errNotFound) {
 		writeError(w, http.StatusNotFound, "user not found")
 		return
@@ -544,7 +577,7 @@ func (s *server) handleAdminUpdateUserRole(w http.ResponseWriter, r *http.Reques
 	if !decodeJSON(w, r, &request) {
 		return
 	}
-	user, err := s.store.SetUserRole(r.Context(), userID, request.Role)
+	user, err := s.adminStore.SetUserRole(r.Context(), userID, request.Role)
 	if errors.Is(err, errNotFound) {
 		writeError(w, http.StatusNotFound, "user not found")
 		return
@@ -583,7 +616,7 @@ func (s *server) handleAdminLoginAttempts(w http.ResponseWriter, r *http.Request
 		success = &parsed
 	}
 
-	result, err := s.store.ListLoginAttempts(r.Context(), LoginAttemptListQuery{
+	result, err := s.adminStore.ListLoginAttempts(r.Context(), LoginAttemptListQuery{
 		UserID:   userID,
 		Success:  success,
 		Query:    r.URL.Query().Get("query"),
@@ -609,7 +642,7 @@ func (s *server) handleAdminSecurityEvents(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	events, err := s.store.ListSecurityEvents(r.Context(), queryInt(r, "limit", 50))
+	events, err := s.adminStore.ListSecurityEvents(r.Context(), queryInt(r, "limit", 50))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load security events")
 		return
@@ -628,7 +661,7 @@ func (s *server) handleAdminNotifications(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	notifications, err := s.store.ListNotifications(r.Context(), queryInt(r, "limit", 50))
+	notifications, err := s.notificationStore.ListNotifications(r.Context(), queryInt(r, "limit", 50))
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load notifications")
 		return
@@ -642,7 +675,7 @@ func (s *server) handleAdminGetSMTPSettings(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	settings, err := s.store.GetSmtpSettings(r.Context())
+	settings, err := s.smtpStore.GetSmtpSettings(r.Context())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load smtp settings")
 		return
@@ -671,7 +704,7 @@ func (s *server) handleAdminUpdateSMTPSettings(w http.ResponseWriter, r *http.Re
 		}
 	}
 
-	settings, err := s.store.SaveSmtpSettings(r.Context(), SmtpSettings{
+	settings, err := s.smtpStore.SaveSmtpSettings(r.Context(), SmtpSettings{
 		Host:              strings.TrimSpace(request.Host),
 		Port:              request.Port,
 		Username:          strings.TrimSpace(request.Username),
@@ -705,7 +738,7 @@ func (s *server) handleAdminSendTestEmail(w http.ResponseWriter, r *http.Request
 		return
 	}
 
-	settings, err := s.store.GetSmtpSettings(r.Context())
+	settings, err := s.smtpStore.GetSmtpSettings(r.Context())
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load smtp settings")
 		return
@@ -728,7 +761,7 @@ func (s *server) handleAdminSendTestEmail(w http.ResponseWriter, r *http.Request
 	}
 
 	now := time.Now().UTC()
-	_ = s.store.CreateNotification(r.Context(), Notification{
+	_ = s.notificationStore.CreateNotification(r.Context(), Notification{
 		ID:        uuid.New(),
 		Type:      "smtp_test",
 		Channel:   "email",
@@ -752,7 +785,7 @@ func (s *server) writeSession(w http.ResponseWriter, r *http.Request, user User,
 		http.SetCookie(w, s.refreshCookie(refreshToken, expiresAt))
 	}
 
-	roles, permissions, err := s.store.ListUserRoles(r.Context(), user.ID)
+	roles, permissions, err := s.adminStore.ListUserRoles(r.Context(), user.ID)
 	if err != nil {
 		writeError(w, http.StatusInternalServerError, "could not load roles")
 		return
@@ -786,7 +819,7 @@ func (s *server) createRefreshSession(r *http.Request, userID uuid.UUID) (string
 	}
 
 	expiresAt := time.Now().UTC().Add(s.config.RefreshTokenLifetime)
-	if err := s.store.CreateRefreshSession(r.Context(), hashRefreshToken(token), userID, expiresAt); err != nil {
+	if err := s.authStore.CreateRefreshSession(r.Context(), hashRefreshToken(token), userID, expiresAt); err != nil {
 		return "", time.Time{}, err
 	}
 
@@ -847,19 +880,19 @@ func (s *server) adminActorFromRequest(r *http.Request) (AdminActor, error) {
 			return AdminActor{}, err
 		}
 
-		return s.store.GetAdminActor(r.Context(), userID)
+		return s.adminStore.GetAdminActor(r.Context(), userID)
 	}
 
 	cookie, err := r.Cookie("refresh_token")
 	if err != nil || cookie.Value == "" {
 		return AdminActor{}, errNotFound
 	}
-	userID, err := s.store.FindRefreshSession(r.Context(), hashRefreshToken(cookie.Value))
+	userID, err := s.authStore.FindRefreshSession(r.Context(), hashRefreshToken(cookie.Value))
 	if err != nil {
 		return AdminActor{}, err
 	}
 
-	return s.store.GetAdminActor(r.Context(), userID)
+	return s.adminStore.GetAdminActor(r.Context(), userID)
 }
 
 func (s *server) recordLoginAttempt(r *http.Request, userID *uuid.UUID, email string, success bool, failureReason LoginFailureReason) {
@@ -871,7 +904,7 @@ func (s *server) recordLoginAttempt(r *http.Request, userID *uuid.UUID, email st
 	ipAddress := clientIPAddress(r)
 	ipHash := sha256.Sum256([]byte(ipAddress))
 
-	_ = s.store.RecordLoginAttempt(r.Context(), LoginAttempt{
+	_ = s.authStore.RecordLoginAttempt(r.Context(), LoginAttempt{
 		ID:              uuid.New(),
 		UserID:          userID,
 		EmailAttempted:  email,
@@ -896,7 +929,7 @@ func (s *server) audit(r *http.Request, actor AdminActor, action string, targetT
 	if err != nil {
 		return
 	}
-	_ = s.store.RecordAdminAuditEntry(r.Context(), AdminAuditEntry{
+	_ = s.auditStore.RecordAdminAuditEntry(r.Context(), AdminAuditEntry{
 		ID:          uuid.New(),
 		ActorUserID: actorID,
 		Action:      action,

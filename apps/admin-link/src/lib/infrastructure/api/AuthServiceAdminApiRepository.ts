@@ -1,4 +1,4 @@
-import type { AdminReadRepository } from '$lib/application/ports/AdminReadRepository';
+import type { AdminRepository } from '$lib/application/ports/AdminRepository';
 import type { LoginAttempt, LoginAttemptQuery } from '$lib/domain/auth-logs/types';
 import type { SecurityEvent } from '$lib/domain/security/types';
 import type { Paginated } from '$lib/domain/shared/pagination';
@@ -7,7 +7,7 @@ import type { Notification } from '$lib/domain/notifications/types';
 import type { SmtpSettings, UpdateSmtpSettingsInput } from '$lib/domain/smtp/types';
 import type { ManagedUserDetail, UserListItem, UserListQuery, UserStatus } from '$lib/domain/users/types';
 
-export class AuthServiceAdminApiRepository implements AdminReadRepository {
+export class AuthServiceAdminApiRepository implements AdminRepository {
 	constructor(
 		private readonly baseUrl: string,
 		private readonly fetchImpl: typeof fetch,

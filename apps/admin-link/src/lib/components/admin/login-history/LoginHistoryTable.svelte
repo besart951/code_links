@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import * as Table from '$lib/components/ui/table/index.js';
+	import { Badge } from '@codelinks/ui-library/components/ui/badge';
+	import * as Table from '@codelinks/ui-library/components/ui/table';
 	import type { LoginAttempt } from '$lib/domain/auth-logs/types';
 
 	let { attempts, maskIp = false }: { attempts: LoginAttempt[]; maskIp?: boolean } = $props();

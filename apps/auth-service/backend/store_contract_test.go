@@ -129,4 +129,29 @@ func runStoreContract(t *testing.T, store Store) {
 	if result.Total == 0 {
 		t.Fatal("expected recorded login attempt")
 	}
+
+	if _, err := store.SetUserRole(ctx, user.ID, AdminRoleSupport); err != nil {
+		t.Fatal(err)
+	}
+	users, err := store.ListAdminUsers(ctx, AdminUserListQuery{
+		Query:     "contract",
+		Role:      string(AdminRoleSupport),
+		Status:    UserStatusActive,
+		Page:      1,
+		PageSize:  1,
+		Sort:      "email",
+		Direction: "asc",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if users.Total != 1 || len(users.Items) != 1 {
+		t.Fatalf("expected one filtered admin user, got total=%d items=%d", users.Total, len(users.Items))
+	}
+	if users.Items[0].Email != email || users.Items[0].PrimaryRole != AdminRoleSupport {
+		t.Fatalf("unexpected admin user projection: %#v", users.Items[0])
+	}
+	if users.Items[0].SuccessfulLoginCount != 1 || users.Items[0].FailedLoginCount != 0 {
+		t.Fatalf("unexpected login counts: %#v", users.Items[0])
+	}
 }

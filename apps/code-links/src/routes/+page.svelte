@@ -5,7 +5,7 @@
 	import { AuthManager, type ProductLicense } from '@codelinks/auth-client';
 	import { products, type ProductId } from '@codelinks/config/products';
 	import { GlobalNavbar } from '@codelinks/ui-library';
-	import { Button } from '$lib/components/ui/button';
+	import { Button } from '@codelinks/ui-library/components/ui/button';
 	import * as m from '$lib/paraglide/messages';
 
 	const auth = new AuthManager({

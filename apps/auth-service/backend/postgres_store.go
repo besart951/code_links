@@ -321,48 +321,158 @@ func (s *postgresStore) ListUserRoles(ctx context.Context, userID uuid.UUID) ([]
 }
 
 func (s *postgresStore) ListAdminUsers(ctx context.Context, query AdminUserListQuery) (AdminUserListResult, error) {
+	page, pageSize := normalizedPage(query.Page, query.PageSize)
+	offset := (page - 1) * pageSize
+	orderBy := adminUserListOrderBy(query.Sort, query.Direction)
 	rows, err := s.pool.Query(ctx, `
-		select id, email, name, password_hash, status, email_verified_at, created_at, updated_at,
-		       last_login_at, coalesce(last_login_ip::text, ''), coalesce(last_login_country_code::text, '')
-		from users
-		order by created_at desc
-	`)
+		with role_summary as (
+			select user_id,
+			       bool_or(role_id = 'admin') as is_admin,
+			       bool_or(role_id = 'support') as is_support,
+			       bool_or(role_id = 'auditor') as is_auditor
+			from user_roles
+			group by user_id
+		),
+		login_summary as (
+			select user_id,
+			       count(*) filter (where success) as successful_login_count,
+			       count(*) filter (where not success) as failed_login_count
+			from login_attempts
+			where user_id is not null
+			group by user_id
+		),
+		filtered as (
+			select u.id,
+			       u.email,
+			       u.name,
+			       u.status,
+			       u.email_verified_at,
+			       u.created_at,
+			       u.last_login_at,
+			       coalesce(u.last_login_ip::text, '') as last_login_ip,
+			       coalesce(u.last_login_country_code::text, '') as last_login_country_code,
+			       case
+			       when coalesce(rs.is_admin, false) then 'admin'
+			       when coalesce(rs.is_support, false) then 'support'
+			       when coalesce(rs.is_auditor, false) then 'auditor'
+			       else 'user'
+			       end as primary_role,
+			       coalesce(ls.successful_login_count, 0) as successful_login_count,
+			       coalesce(ls.failed_login_count, 0) as failed_login_count
+			from users u
+			left join role_summary rs on rs.user_id = u.id
+			left join login_summary ls on ls.user_id = u.id
+			where ($1 = '' or lower(u.name) like '%' || lower($1) || '%' or lower(u.email) like '%' || lower($1) || '%')
+			  and ($2 = '' or u.status = $2)
+		),
+		counted as (
+			select *, count(*) over() as total_count
+			from filtered
+			where ($3 = '' or primary_role = $3)
+		)
+		select id,
+		       email,
+		       name,
+		       status,
+		       email_verified_at,
+		       created_at,
+		       last_login_at,
+		       last_login_ip,
+		       last_login_country_code,
+		       primary_role,
+		       successful_login_count,
+		       failed_login_count,
+		       total_count
+		from counted
+		order by `+orderBy+`
+		limit $4 offset $5
+	`, query.Query, string(query.Status), query.Role, pageSize, offset)
 	if err != nil {
 		return AdminUserListResult{}, err
 	}
 	defer rows.Close()
 
 	items := []AdminUserListItem{}
+	total := 0
 	for rows.Next() {
-		user, err := scanUserRow(rows)
-		if err != nil {
+		var id uuid.UUID
+		var email string
+		var name string
+		var status UserStatus
+		var emailVerifiedAt sql.NullTime
+		var createdAt time.Time
+		var lastLoginAt sql.NullTime
+		var lastLoginIP string
+		var lastLoginCountryCode string
+		var primaryRole AdminRole
+		var successfulLoginCount int
+		var failedLoginCount int
+		if err := rows.Scan(
+			&id,
+			&email,
+			&name,
+			&status,
+			&emailVerifiedAt,
+			&createdAt,
+			&lastLoginAt,
+			&lastLoginIP,
+			&lastLoginCountryCode,
+			&primaryRole,
+			&successfulLoginCount,
+			&failedLoginCount,
+			&total,
+		); err != nil {
 			return AdminUserListResult{}, err
 		}
-		item, err := s.adminUserListItem(ctx, user)
-		if err != nil {
-			return AdminUserListResult{}, err
+		var lastLogin *time.Time
+		if lastLoginAt.Valid {
+			lastLogin = &lastLoginAt.Time
 		}
-		if matchesUserQuery(item, query) {
-			items = append(items, item)
-		}
+		items = append(items, AdminUserListItem{
+			ID:                   id.String(),
+			Name:                 name,
+			Email:                email,
+			PrimaryRole:          primaryRole,
+			Status:               status,
+			EmailVerified:        emailVerifiedAt.Valid,
+			CreatedAt:            createdAt,
+			LastLoginAt:          lastLogin,
+			SuccessfulLoginCount: successfulLoginCount,
+			FailedLoginCount:     failedLoginCount,
+			LastKnownIPAddress:   emptyStringToNil(lastLoginIP),
+			LastLoginCountryCode: emptyStringToNil(lastLoginCountryCode),
+		})
 	}
 	if err := rows.Err(); err != nil {
 		return AdminUserListResult{}, err
 	}
 
-	sortAdminUsers(items, query.Sort, query.Direction)
-	total := len(items)
-	page, pageSize := normalizedPage(query.Page, query.PageSize)
-	start := (page - 1) * pageSize
-	if start > len(items) {
-		start = len(items)
-	}
-	end := start + pageSize
-	if end > len(items) {
-		end = len(items)
+	return AdminUserListResult{Items: items, Total: total, Page: page, PageSize: pageSize}, nil
+}
+
+func adminUserListOrderBy(field string, direction string) string {
+	column := "created_at"
+	switch field {
+	case "name":
+		column = "lower(name)"
+	case "email":
+		column = "lower(email)"
+	case "primaryRole":
+		column = "primary_role"
+	case "status":
+		column = "status"
+	case "lastLoginAt":
+		column = "last_login_at"
+	case "createdAt", "":
+		column = "created_at"
 	}
 
-	return AdminUserListResult{Items: items[start:end], Total: total, Page: page, PageSize: pageSize}, nil
+	dir := "desc"
+	if direction == "asc" {
+		dir = "asc"
+	}
+
+	return column + " " + dir + " nulls last, created_at desc, id asc"
 }
 
 func (s *postgresStore) GetManagedUserDetail(ctx context.Context, userID uuid.UUID) (ManagedUserDetail, error) {
@@ -537,11 +647,24 @@ func (s *postgresStore) GetDashboardStats(ctx context.Context) (DashboardStats, 
 	`).Scan(&stats.LoginAttempts.Total, &stats.LoginAttempts.Successful, &stats.LoginAttempts.Failed); err != nil {
 		return DashboardStats{}, err
 	}
-	_ = s.pool.QueryRow(ctx, `select count(*) from password_reset_tokens where created_at > now() - interval '24 hours'`).Scan(&stats.PasswordResetRequests)
-	_ = s.pool.QueryRow(ctx, `select count(*) from notifications`).Scan(&stats.Notifications)
-	_ = s.pool.QueryRow(ctx, `select count(*) from security_events where status = 'open'`).Scan(&stats.OpenSecurityEvents)
-	stats.TopCountries, _ = s.topCounts(ctx, `select coalesce(country_code::text, ''), count(*) from login_attempts where country_code is not null group by country_code order by count(*) desc limit 5`)
-	stats.TopIPAddresses, _ = s.topCounts(ctx, `select ip_address::text, count(*) from login_attempts group by ip_address order by count(*) desc limit 5`)
+	if err := s.pool.QueryRow(ctx, `select count(*) from password_reset_tokens where created_at > now() - interval '24 hours'`).Scan(&stats.PasswordResetRequests); err != nil {
+		return DashboardStats{}, err
+	}
+	if err := s.pool.QueryRow(ctx, `select count(*) from notifications`).Scan(&stats.Notifications); err != nil {
+		return DashboardStats{}, err
+	}
+	if err := s.pool.QueryRow(ctx, `select count(*) from security_events where status = 'open'`).Scan(&stats.OpenSecurityEvents); err != nil {
+		return DashboardStats{}, err
+	}
+	var err error
+	stats.TopCountries, err = s.topCounts(ctx, `select coalesce(country_code::text, ''), count(*) from login_attempts where country_code is not null group by country_code order by count(*) desc limit 5`)
+	if err != nil {
+		return DashboardStats{}, err
+	}
+	stats.TopIPAddresses, err = s.topCounts(ctx, `select ip_address::text, count(*) from login_attempts group by ip_address order by count(*) desc limit 5`)
+	if err != nil {
+		return DashboardStats{}, err
+	}
 
 	return stats, nil
 }

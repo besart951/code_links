@@ -97,6 +97,26 @@ values
 	('auditor', 'Auditor')
 on conflict (id) do nothing;
 
+delete from role_permissions
+where permission_id in (
+	'admin.users.status.write',
+	'admin.users.roles.write',
+	'admin.logs.read',
+	'admin.security.read',
+	'admin.security.resolve',
+	'admin.audit.read'
+);
+
+delete from permissions
+where id in (
+	'admin.users.status.write',
+	'admin.users.roles.write',
+	'admin.logs.read',
+	'admin.security.read',
+	'admin.security.resolve',
+	'admin.audit.read'
+);
+
 insert into permissions (id, name)
 values
 	('admin.dashboard.read', 'Read admin dashboard'),

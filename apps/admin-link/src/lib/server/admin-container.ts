@@ -12,11 +12,11 @@ import { GetUserDetailUseCase } from '$lib/application/users/GetUserDetailUseCas
 import { ListUsersUseCase } from '$lib/application/users/ListUsersUseCase';
 import { SetUserRoleUseCase } from '$lib/application/users/SetUserRoleUseCase';
 import { SetUserStatusUseCase } from '$lib/application/users/SetUserStatusUseCase';
-import type { AdminReadRepository } from '$lib/application/ports/AdminReadRepository';
+import type { AdminRepository } from '$lib/application/ports/AdminRepository';
 import { AuthServiceAdminApiRepository } from '$lib/infrastructure/api/AuthServiceAdminApiRepository';
 import { MockAdminRepository } from '$lib/server/mock-admin-repository';
 
-function createAdminRepository(event: RequestEvent): AdminReadRepository {
+function createAdminRepository(event: RequestEvent): AdminRepository {
 	if (
 		env.ADMIN_LINK_DATA_SOURCE === 'mock' ||
 		env.ADMIN_LINK_MOCK_AUTH === 'true' ||
@@ -34,18 +34,22 @@ function createAdminRepository(event: RequestEvent): AdminReadRepository {
 
 export function createAdminContainer(event: RequestEvent) {
 	const repository = createAdminRepository(event);
+	const repositories = {
+		query: repository,
+		command: repository
+	};
 
 	return {
-		getDashboardSummary: new GetDashboardSummaryUseCase(repository),
-		listUsers: new ListUsersUseCase(repository),
-		getUserDetail: new GetUserDetailUseCase(repository),
-		listLoginAttempts: new ListLoginAttemptsUseCase(repository),
-		listSecurityEvents: new ListSecurityEventsUseCase(repository),
-		listNotifications: new ListNotificationsUseCase(repository),
-		getSmtpSettings: new GetSmtpSettingsUseCase(repository),
-		updateSmtpSettings: new UpdateSmtpSettingsUseCase(repository),
-		sendTestEmail: new SendTestEmailUseCase(repository),
-		setUserStatus: new SetUserStatusUseCase(repository),
-		setUserRole: new SetUserRoleUseCase(repository)
+		getDashboardSummary: new GetDashboardSummaryUseCase(repositories.query),
+		listUsers: new ListUsersUseCase(repositories.query),
+		getUserDetail: new GetUserDetailUseCase(repositories.query),
+		listLoginAttempts: new ListLoginAttemptsUseCase(repositories.query),
+		listSecurityEvents: new ListSecurityEventsUseCase(repositories.query),
+		listNotifications: new ListNotificationsUseCase(repositories.query),
+		getSmtpSettings: new GetSmtpSettingsUseCase(repositories.query),
+		updateSmtpSettings: new UpdateSmtpSettingsUseCase(repositories.command),
+		sendTestEmail: new SendTestEmailUseCase(repositories.command),
+		setUserStatus: new SetUserStatusUseCase(repositories.command),
+		setUserRole: new SetUserRoleUseCase(repositories.command)
 	};
 }

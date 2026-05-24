@@ -1,7 +1,7 @@
 <script lang="ts">
 	import AuthShell from '$lib/components/auth-shell.svelte';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import { Button } from '@codelinks/ui-library/components/ui/button';
+	import * as Card from '@codelinks/ui-library/components/ui/card';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hasPermission, permissionsForRoles } from './permissions';
+import { hasPermission } from './permissions';
 import type { AdminActor } from './types';
 
 describe('admin permissions', () => {
@@ -11,14 +11,14 @@ describe('admin permissions', () => {
 			name: 'Admin',
 			email: 'admin@example.com',
 			roles: ['admin'],
-			permissions: permissionsForRoles(['admin'])
+			permissions: ['admin.users.update']
 		};
 		const support: AdminActor = {
 			id: 'support',
 			name: 'Support',
 			email: 'support@example.com',
 			roles: ['support'],
-			permissions: permissionsForRoles(['support'])
+			permissions: ['admin.users.lock']
 		};
 
 		expect(hasPermission(admin, 'admin.users.update')).toBe(true);

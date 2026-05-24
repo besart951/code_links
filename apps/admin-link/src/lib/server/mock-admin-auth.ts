@@ -1,5 +1,4 @@
-import { isAdminRole } from '@codelinks/config/admin-access';
-import { permissionsForRoles } from '$lib/domain/admin-access/permissions';
+import { isAdminRole, rolePermissions } from '@codelinks/config/admin-access';
 import type { AdminActor, AdminRole } from '$lib/domain/admin-access/types';
 
 function normalizeRole(value: string | null): AdminRole {
@@ -18,6 +17,6 @@ export function createMockAdminActor(roleValue: string | null): AdminActor {
 		email: `${role}@codelinks.localhost`,
 		name: role === 'admin' ? 'CodeLinks Admin' : role === 'support' ? 'Support Team' : 'Audit Reader',
 		roles: [role],
-		permissions: permissionsForRoles([role])
+		permissions: [...rolePermissions[role]]
 	};
 }

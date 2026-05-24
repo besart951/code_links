@@ -1,7 +1,7 @@
 <script lang="ts">
 	import LoginHistoryTable from '$lib/components/admin/login-history/LoginHistoryTable.svelte';
 	import UserStatusBadge from '$lib/components/admin/users/UserStatusBadge.svelte';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import * as Card from '@codelinks/ui-library/components/ui/card';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();

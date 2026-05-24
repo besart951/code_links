@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import * as Table from '$lib/components/ui/table/index.js';
+	import { Button } from '@codelinks/ui-library/components/ui/button';
+	import { Badge } from '@codelinks/ui-library/components/ui/badge';
+	import { Input } from '@codelinks/ui-library/components/ui/input';
+	import * as Table from '@codelinks/ui-library/components/ui/table';
 	import { UserTableState } from '$lib/application/users/UserTableState.svelte';
 	import { hasPermission } from '$lib/domain/admin-access/permissions';
 	import type { AdminActor } from '$lib/domain/admin-access/types';

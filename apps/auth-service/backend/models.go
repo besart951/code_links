@@ -3,6 +3,7 @@ package main
 import (
 	"time"
 
+	"github.com/besart951/code-links/packages/adminaccess"
 	"github.com/google/uuid"
 )
 
@@ -17,26 +18,26 @@ const (
 type AdminRole string
 
 const (
-	AdminRoleAdmin   AdminRole = "admin"
-	AdminRoleSupport AdminRole = "support"
-	AdminRoleAuditor AdminRole = "auditor"
-	AdminRoleUser    AdminRole = "user"
+	AdminRoleAdmin   AdminRole = adminaccess.AdminRoleAdmin
+	AdminRoleSupport AdminRole = adminaccess.AdminRoleSupport
+	AdminRoleAuditor AdminRole = adminaccess.AdminRoleAuditor
+	AdminRoleUser    AdminRole = adminaccess.RoleUser
 )
 
 type AdminPermission string
 
 const (
-	PermissionDashboardRead      AdminPermission = "admin.dashboard.read"
-	PermissionUsersRead          AdminPermission = "admin.users.read"
-	PermissionUsersUpdate        AdminPermission = "admin.users.update"
-	PermissionUsersLock          AdminPermission = "admin.users.lock"
-	PermissionUsersChangeRole    AdminPermission = "admin.users.change_role"
-	PermissionAuthLogsRead       AdminPermission = "admin.auth_logs.read"
-	PermissionSecurityEventsRead AdminPermission = "admin.security_events.read"
-	PermissionSMTPSettingsRead   AdminPermission = "admin.smtp_settings.read"
-	PermissionSMTPSettingsUpdate AdminPermission = "admin.smtp_settings.update"
-	PermissionNotificationsRead  AdminPermission = "admin.notifications.read"
-	PermissionAuditEntriesRead   AdminPermission = "admin.audit_entries.read"
+	PermissionDashboardRead      AdminPermission = adminaccess.PermissionDashboardRead
+	PermissionUsersRead          AdminPermission = adminaccess.PermissionUsersRead
+	PermissionUsersUpdate        AdminPermission = adminaccess.PermissionUsersUpdate
+	PermissionUsersLock          AdminPermission = adminaccess.PermissionUsersLock
+	PermissionUsersChangeRole    AdminPermission = adminaccess.PermissionUsersChangeRole
+	PermissionAuthLogsRead       AdminPermission = adminaccess.PermissionAuthLogsRead
+	PermissionSecurityEventsRead AdminPermission = adminaccess.PermissionSecurityEventsRead
+	PermissionSMTPSettingsRead   AdminPermission = adminaccess.PermissionSMTPSettingsRead
+	PermissionSMTPSettingsUpdate AdminPermission = adminaccess.PermissionSMTPSettingsUpdate
+	PermissionNotificationsRead  AdminPermission = adminaccess.PermissionNotificationsRead
+	PermissionAuditEntriesRead   AdminPermission = adminaccess.PermissionAuditEntriesRead
 )
 
 type User struct {

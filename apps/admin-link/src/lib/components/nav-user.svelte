@@ -2,8 +2,8 @@
 	import DotsVerticalIcon from '@tabler/icons-svelte/icons/dots-vertical';
 	import LogoutIcon from '@tabler/icons-svelte/icons/logout';
 	import ShieldIcon from '@tabler/icons-svelte/icons/shield';
-	import * as Avatar from '$lib/components/ui/avatar/index.js';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index.js';
+	import * as Avatar from '@codelinks/ui-library/components/ui/avatar';
+	import * as DropdownMenu from '@codelinks/ui-library/components/ui/dropdown-menu';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { AdminActor } from '$lib/domain/admin-access/types';
 

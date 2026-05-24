@@ -5,6 +5,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 	"testing"
 )
 
@@ -33,5 +34,19 @@ func TestProductCatalogMatchesTypeScriptConfig(t *testing.T) {
 
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("product catalog drifted\nwant: %#v\ngot:  %#v", want, got)
+	}
+}
+
+func TestAuthSchemaProductConstraintMatchesCatalog(t *testing.T) {
+	content, err := os.ReadFile("../../apps/auth-service/backend/migrations/001_auth_schema.sql")
+	if err != nil {
+		t.Fatal(err)
+	}
+	schema := string(content)
+
+	for _, id := range IDs {
+		if !strings.Contains(schema, "'"+id+"'") {
+			t.Fatalf("auth schema product constraint missing %q", id)
+		}
 	}
 }

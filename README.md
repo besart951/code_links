@@ -14,10 +14,13 @@ pnpm monorepo scaffold for the CodeLinks SaaS platform.
 
 ```sh
 pnpm install
+pnpm generate:contracts
 pnpm check
 pnpm test
 pnpm build
 ```
+
+`pnpm test` starts a throwaway Postgres container for the Auth Service store contract. Use `pnpm go:test` for the non-Docker Go path only.
 
 Run the landing page locally:
 

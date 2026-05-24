@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Separator } from '$lib/components/ui/separator/index.js';
+	import { Separator } from '@codelinks/ui-library/components/ui/separator';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
 	let { title }: { title: string } = $props();

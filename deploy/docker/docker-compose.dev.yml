@@ -13,7 +13,7 @@ services:
   auth-service:
     image: golang:1.26-alpine
     working_dir: /workspace/apps/auth-service/backend
-    command: sh -c "go mod download && go run ."
+    command: sh /workspace/deploy/docker/run-go-dev.sh
     environment:
       PORT: "8080"
       DATABASE_URL: postgres://codelinks:codelinks@postgres:5432/codelinks_auth?sslmode=disable
@@ -21,17 +21,20 @@ services:
       JWT_AUDIENCE: codelinks-products
       COOKIE_DOMAIN: .codelinks.localhost
       ALLOWED_ORIGINS: http://code-links.codelinks.localhost,http://admin-link.codelinks.localhost,http://auth.codelinks.localhost
+      ENABLE_MOCK_PURCHASE: "true"
     depends_on:
       - postgres
     ports:
       - "8080:8080"
     volumes:
       - ../..:/workspace
+      - codelinks-go-mod:/go/pkg/mod
+      - codelinks-go-build:/root/.cache/go-build
 
   infra-link-api:
     image: golang:1.26-alpine
     working_dir: /workspace/apps/infra-link/backend
-    command: sh -c "go mod download && go run ."
+    command: sh /workspace/deploy/docker/run-go-dev.sh
     environment:
       PORT: "8091"
       PRODUCT_ID: infra-link
@@ -44,11 +47,13 @@ services:
       - "8091:8091"
     volumes:
       - ../..:/workspace
+      - codelinks-go-mod:/go/pkg/mod
+      - codelinks-go-build:/root/.cache/go-build
 
   planer-link-api:
     image: golang:1.26-alpine
     working_dir: /workspace/apps/planer-link/backend
-    command: sh -c "go mod download && go run ."
+    command: sh /workspace/deploy/docker/run-go-dev.sh
     environment:
       PORT: "8092"
       PRODUCT_ID: planer-link
@@ -61,11 +66,13 @@ services:
       - "8092:8092"
     volumes:
       - ../..:/workspace
+      - codelinks-go-mod:/go/pkg/mod
+      - codelinks-go-build:/root/.cache/go-build
 
   loka-link-api:
     image: golang:1.26-alpine
     working_dir: /workspace/apps/loka-link/backend
-    command: sh -c "go mod download && go run ."
+    command: sh /workspace/deploy/docker/run-go-dev.sh
     environment:
       PORT: "8093"
       PRODUCT_ID: loka-link
@@ -78,31 +85,37 @@ services:
       - "8093:8093"
     volumes:
       - ../..:/workspace
+      - codelinks-go-mod:/go/pkg/mod
+      - codelinks-go-build:/root/.cache/go-build
 
   code-links-web:
     image: node:24-alpine
     working_dir: /workspace
-    command: sh -c "corepack enable && corepack pnpm install && corepack pnpm --filter code-links dev --host 0.0.0.0"
+    command: sh deploy/docker/run-node-dev.sh --filter code-links dev --host 0.0.0.0
     environment:
       PUBLIC_AUTH_BASE_URL: http://auth.codelinks.localhost
     ports:
       - "5173:5173"
     volumes:
       - ../..:/workspace
+      - codelinks-node-modules:/workspace/node_modules
+      - codelinks-pnpm-store:/root/.local/share/pnpm/store
 
   auth-frontend:
     image: node:24-alpine
     working_dir: /workspace
-    command: sh -c "corepack enable && corepack pnpm install && corepack pnpm --filter @codelinks/auth-frontend dev --host 0.0.0.0 --port 5174"
+    command: sh deploy/docker/run-node-dev.sh --filter @codelinks/auth-frontend dev --host 0.0.0.0 --port 5174
     ports:
       - "5174:5174"
     volumes:
       - ../..:/workspace
+      - codelinks-node-modules:/workspace/node_modules
+      - codelinks-pnpm-store:/root/.local/share/pnpm/store
 
   admin-link-web:
     image: node:24-alpine
     working_dir: /workspace
-    command: sh -c "corepack enable && corepack pnpm install && corepack pnpm --filter @codelinks/admin-link dev --host 0.0.0.0 --port 5178"
+    command: sh deploy/docker/run-node-dev.sh --filter @codelinks/admin-link dev --host 0.0.0.0 --port 5178
     environment:
       AUTH_API_BASE_URL: http://auth-service:8080
       AUTH_FRONTEND_LOGIN_URL: http://auth.codelinks.localhost/login
@@ -110,33 +123,41 @@ services:
       - "5178:5178"
     volumes:
       - ../..:/workspace
+      - codelinks-node-modules:/workspace/node_modules
+      - codelinks-pnpm-store:/root/.local/share/pnpm/store
 
   infra-link-web:
     image: node:24-alpine
     working_dir: /workspace
-    command: sh -c "corepack enable && corepack pnpm install && corepack pnpm --filter @codelinks/infra-link-frontend dev --host 0.0.0.0 --port 5175"
+    command: sh deploy/docker/run-node-dev.sh --filter @codelinks/infra-link-frontend dev --host 0.0.0.0 --port 5175
     ports:
       - "5175:5175"
     volumes:
       - ../..:/workspace
+      - codelinks-node-modules:/workspace/node_modules
+      - codelinks-pnpm-store:/root/.local/share/pnpm/store
 
   planer-link-web:
     image: node:24-alpine
     working_dir: /workspace
-    command: sh -c "corepack enable && corepack pnpm install && corepack pnpm --filter @codelinks/planer-link-frontend dev --host 0.0.0.0 --port 5176"
+    command: sh deploy/docker/run-node-dev.sh --filter @codelinks/planer-link-frontend dev --host 0.0.0.0 --port 5176
     ports:
       - "5176:5176"
     volumes:
       - ../..:/workspace
+      - codelinks-node-modules:/workspace/node_modules
+      - codelinks-pnpm-store:/root/.local/share/pnpm/store
 
   loka-link-web:
     image: node:24-alpine
     working_dir: /workspace
-    command: sh -c "corepack enable && corepack pnpm install && corepack pnpm --filter @codelinks/loka-link-frontend dev --host 0.0.0.0 --port 5177"
+    command: sh deploy/docker/run-node-dev.sh --filter @codelinks/loka-link-frontend dev --host 0.0.0.0 --port 5177
     ports:
       - "5177:5177"
     volumes:
       - ../..:/workspace
+      - codelinks-node-modules:/workspace/node_modules
+      - codelinks-pnpm-store:/root/.local/share/pnpm/store
 
   caddy:
     image: caddy:2-alpine
@@ -158,3 +179,7 @@ services:
 
 volumes:
   codelinks-postgres:
+  codelinks-go-mod:
+  codelinks-go-build:
+  codelinks-node-modules:
+  codelinks-pnpm-store:

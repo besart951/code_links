@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Badge } from '$lib/components/ui/badge/index.js';
+	import { Badge } from '@codelinks/ui-library/components/ui/badge';
 	import type { UserStatus } from '$lib/domain/users/types';
 
 	let { status }: { status: UserStatus } = $props();

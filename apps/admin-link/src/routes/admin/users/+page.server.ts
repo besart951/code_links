@@ -1,34 +1,18 @@
 import { fail } from '@sveltejs/kit';
-import { isRole } from '@codelinks/config/admin-access';
 import { canSeeRawIpAddress } from '$lib/domain/admin-access/permissions';
-import type { UserListQuery, UserStatus } from '$lib/domain/users/types';
+import {
+	formString,
+	parseRole,
+	parseUserListQuery,
+	parseUserStatus
+} from '$lib/server/admin-route-helpers';
 import { createAdminContainer } from '$lib/server/admin-container';
 import { requireAdmin } from '$lib/server/auth';
-
-function parseStatus(value: string | null): UserStatus | undefined {
-	return value === 'active' || value === 'disabled' || value === 'locked' ? value : undefined;
-}
-
-function parseUserQuery(url: URL): UserListQuery {
-	const role = url.searchParams.get('role');
-
-	return {
-		query: url.searchParams.get('query') || undefined,
-		role: role && role !== 'all' ? (role as UserListQuery['role']) : undefined,
-		status: parseStatus(url.searchParams.get('status')),
-		page: Number(url.searchParams.get('page') ?? 1),
-		pageSize: Number(url.searchParams.get('pageSize') ?? 25),
-		sort: {
-			field: 'createdAt',
-			direction: 'desc'
-		}
-	};
-}
 
 export async function load(event) {
 	const admin = requireAdmin(event.locals);
 	const adminContainer = createAdminContainer(event);
-	const query = parseUserQuery(event.url);
+	const query = parseUserListQuery(event.url);
 	const users = await adminContainer.listUsers.execute(admin, query);
 
 	return {
@@ -43,8 +27,8 @@ export const actions = {
 		const admin = requireAdmin(event.locals);
 		const adminContainer = createAdminContainer(event);
 		const formData = await event.request.formData();
-		const userId = String(formData.get('userId') ?? '');
-		const status = parseStatus(String(formData.get('status') ?? ''));
+		const userId = formString(formData, 'userId');
+		const status = parseUserStatus(formData.get('status'));
 
 		if (!userId || !status) {
 			return fail(400, { message: 'Invalid status change request' });
@@ -58,10 +42,10 @@ export const actions = {
 		const admin = requireAdmin(event.locals);
 		const adminContainer = createAdminContainer(event);
 		const formData = await event.request.formData();
-		const userId = String(formData.get('userId') ?? '');
-		const role = String(formData.get('role') ?? '');
+		const userId = formString(formData, 'userId');
+		const role = parseRole(formData.get('role'));
 
-		if (!userId || !isRole(role)) {
+		if (!userId || !role) {
 			return fail(400, { message: 'Invalid role change request' });
 		}
 

@@ -5,10 +5,13 @@ use (
 	./apps/infra-link/backend
 	./apps/loka-link/backend
 	./apps/planer-link/backend
+	./packages/adminaccess
 	./packages/productauth
 	./packages/productcatalog
 	./packages/productserver
 )
+
+replace github.com/besart951/code-links/packages/adminaccess v0.0.0 => ./packages/adminaccess
 
 replace github.com/besart951/code-links/packages/productcatalog v0.0.0 => ./packages/productcatalog
 

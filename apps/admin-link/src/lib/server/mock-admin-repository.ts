@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import type { AdminReadRepository } from '$lib/application/ports/AdminReadRepository';
+import type { AdminRepository } from '$lib/application/ports/AdminRepository';
 import type { LoginAttempt, LoginAttemptQuery } from '$lib/domain/auth-logs/types';
 import type { Paginated } from '$lib/domain/shared/pagination';
 import type { DashboardSummary } from '$lib/domain/statistics/types';
@@ -232,7 +232,7 @@ function compareNullableString(left: string | null, right: string | null) {
 	return (left ?? '').localeCompare(right ?? '');
 }
 
-export class MockAdminRepository implements AdminReadRepository {
+export class MockAdminRepository implements AdminRepository {
 	async getDashboardSummary(): Promise<DashboardSummary> {
 		const successful = loginAttempts.filter((attempt) => attempt.success).length;
 		const failed = loginAttempts.length - successful;

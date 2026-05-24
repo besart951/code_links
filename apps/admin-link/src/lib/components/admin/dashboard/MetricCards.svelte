@@ -5,8 +5,8 @@
 	import LoginIcon from '@tabler/icons-svelte/icons/login';
 	import MailIcon from '@tabler/icons-svelte/icons/mail';
 	import UsersIcon from '@tabler/icons-svelte/icons/users';
-	import { Badge } from '$lib/components/ui/badge/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
+	import { Badge } from '@codelinks/ui-library/components/ui/badge';
+	import * as Card from '@codelinks/ui-library/components/ui/card';
 	import type { DashboardSummary } from '$lib/domain/statistics/types';
 
 	let { summary }: { summary: DashboardSummary } = $props();

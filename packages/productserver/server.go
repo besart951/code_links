@@ -19,6 +19,13 @@ type Config struct {
 	Audience  string
 }
 
+type RouteRegistrar func(*http.ServeMux, RouteTools)
+
+type RouteTools struct {
+	Config        Config
+	Authenticated func(http.Handler) http.Handler
+}
+
 func Main(defaultProductID string, defaultPort string) {
 	config := LoadConfig(defaultProductID, defaultPort)
 	if err := ListenAndServe(context.Background(), config); err != nil {
@@ -46,12 +53,24 @@ func ListenAndServe(ctx context.Context, config Config) error {
 	return http.ListenAndServe(":"+config.Port, Handler(config, validator))
 }
 
-func Handler(config Config, validator *productauth.RemoteValidator) http.Handler {
+func Handler(config Config, validator *productauth.RemoteValidator, registrars ...RouteRegistrar) http.Handler {
 	mux := http.NewServeMux()
+	tools := RouteTools{
+		Config: config,
+		Authenticated: func(next http.Handler) http.Handler {
+			if validator == nil {
+				return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+					writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "auth validator unavailable"})
+				})
+			}
+			return validator.Middleware(next)
+		},
+	}
+
 	mux.HandleFunc("GET /api/health", func(w http.ResponseWriter, _ *http.Request) {
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "productId": config.ProductID})
 	})
-	mux.Handle("GET /api/me", validator.Middleware(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	mux.Handle("GET /api/me", tools.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		claims, _ := productauth.ClaimsFromContext(r.Context())
 		writeJSON(w, http.StatusOK, map[string]any{
 			"userId":    claims.Subject,
@@ -60,6 +79,9 @@ func Handler(config Config, validator *productauth.RemoteValidator) http.Handler
 			"productId": config.ProductID,
 		})
 	})))
+	for _, registrar := range registrars {
+		registrar(mux, tools)
+	}
 
 	return withCORS(mux)
 }

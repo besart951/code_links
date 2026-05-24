@@ -1,8 +1,8 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
-	import * as Field from '$lib/components/ui/field/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
+	import { Button } from '@codelinks/ui-library/components/ui/button';
+	import * as Card from '@codelinks/ui-library/components/ui/card';
+	import * as Field from '@codelinks/ui-library/components/ui/field';
+	import { Input } from '@codelinks/ui-library/components/ui/input';
 
 	let {
 		form

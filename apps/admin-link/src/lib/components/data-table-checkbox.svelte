@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Checkbox } from "$lib/components/ui/checkbox/index.js";
+	import { Checkbox } from "@codelinks/ui-library/components/ui/checkbox";
 	import type { ComponentProps } from "svelte";
 
 	let {

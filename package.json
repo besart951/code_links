@@ -6,7 +6,8 @@
 	"packageManager": "pnpm@11.2.2",
 	"scripts": {
 		"dev": "pnpm --filter code-links dev",
-		"dev:admin": "pnpm --filter @codelinks/admin-link dev",
+		"dev:admin": "node scripts/dev-admin-standalone.mjs",
+		"dev:admin:real": "pnpm --filter @codelinks/admin-link dev",
 		"dev:all": "pnpm --parallel --filter code-links --filter @codelinks/admin-link --filter @codelinks/auth-frontend --filter @codelinks/infra-link-frontend --filter @codelinks/planer-link-frontend --filter @codelinks/loka-link-frontend dev",
 		"generate:contracts": "pnpm --filter @codelinks/config generate",
 		"check": "pnpm -r --if-present check",

@@ -11,7 +11,7 @@
 </script>
 
 <div class="overflow-x-auto rounded-lg border">
-	<Table.Root class="min-w-[44rem]">
+	<Table.Root class="min-w-176">
 		<Table.Header>
 			<Table.Row>
 				<Table.Head>Typ</Table.Head>

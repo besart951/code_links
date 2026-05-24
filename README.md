@@ -28,11 +28,21 @@ Run the landing page locally:
 pnpm dev
 ```
 
+Run the Admin Console locally with mock auth/data:
+
+```sh
+pnpm dev:admin
+```
+
+Open `http://localhost:5178/admin`.
+
 Run the Docker/Caddy dev stack:
 
 ```sh
-docker compose up --build
+pnpm compose:dev
 ```
+
+The Docker/Caddy stack needs port 80. If a `*.codelinks.localhost` URL shows an Apache default page, stop the local Apache service that is already bound to port 80, then restart the stack.
 
 Local Caddy hosts:
 

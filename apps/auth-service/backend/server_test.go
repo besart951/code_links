@@ -229,6 +229,49 @@ func TestSMTPSettingsAreEncryptedAndSupportCannotUpdate(t *testing.T) {
 	}
 }
 
+func TestAdminAPIMasksIPMetadataWithoutRawPermission(t *testing.T) {
+	server := newTestServer(t)
+	auditorLogin := loginAndDecode(t, server, "auditor@codelinks.dev", "password")
+
+	attemptsRequest := httptest.NewRequest(http.MethodGet, "/api/admin/login-attempts", nil)
+	attemptsRequest.Header.Set("Authorization", "Bearer "+auditorLogin.AccessToken)
+	attemptsRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(attemptsRecorder, attemptsRequest)
+	if attemptsRecorder.Code != http.StatusOK {
+		t.Fatalf("expected login attempts 200, got %d: %s", attemptsRecorder.Code, attemptsRecorder.Body.String())
+	}
+
+	var attempts LoginAttemptListResult
+	if err := json.NewDecoder(attemptsRecorder.Body).Decode(&attempts); err != nil {
+		t.Fatal(err)
+	}
+	if len(attempts.Items) == 0 {
+		t.Fatal("expected at least one login attempt")
+	}
+	if got := attempts.Items[0].IPAddress; got != "192.0.x.x" {
+		t.Fatalf("expected masked login attempt IP, got %q", got)
+	}
+
+	statsRequest := httptest.NewRequest(http.MethodGet, "/api/admin/dashboard/stats", nil)
+	statsRequest.Header.Set("Authorization", "Bearer "+auditorLogin.AccessToken)
+	statsRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(statsRecorder, statsRequest)
+	if statsRecorder.Code != http.StatusOK {
+		t.Fatalf("expected dashboard stats 200, got %d: %s", statsRecorder.Code, statsRecorder.Body.String())
+	}
+
+	var stats DashboardStats
+	if err := json.NewDecoder(statsRecorder.Body).Decode(&stats); err != nil {
+		t.Fatal(err)
+	}
+	if len(stats.TopIPAddresses) == 0 {
+		t.Fatal("expected dashboard IP stats")
+	}
+	if got := stats.TopIPAddresses[0].Key; got != "192.0.x.x" {
+		t.Fatalf("expected masked dashboard IP, got %q", got)
+	}
+}
+
 func TestMockPurchaseGrantsLicenseAndRefreshesAccessToken(t *testing.T) {
 	server := newTestServer(t)
 	loginRecorder := httptest.NewRecorder()

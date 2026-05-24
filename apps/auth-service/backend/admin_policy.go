@@ -37,3 +37,13 @@ func primaryRole(roles []AdminRole) AdminRole {
 
 	return AdminRoleUser
 }
+
+func hasAdminPermission(actor AdminActor, permission AdminPermission) bool {
+	for _, grant := range actor.Permissions {
+		if grant == permission {
+			return true
+		}
+	}
+
+	return false
+}

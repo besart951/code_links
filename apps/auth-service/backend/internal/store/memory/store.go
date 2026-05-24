@@ -1,10 +1,7 @@
-package main
+package memory
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/base64"
-	"errors"
 	"sort"
 	"strings"
 	"sync"
@@ -14,22 +11,7 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-var (
-	errNotFound  = errors.New("not found")
-	errConflict  = errors.New("conflict")
-	errForbidden = errors.New("forbidden")
-)
-
-func hashRefreshToken(token string) string {
-	return hashOpaqueToken(token)
-}
-
-func hashOpaqueToken(token string) string {
-	sum := sha256.Sum256([]byte(token))
-	return base64.RawURLEncoding.EncodeToString(sum[:])
-}
-
-type memoryStore struct {
+type Store struct {
 	mu                  sync.RWMutex
 	usersByID           map[uuid.UUID]User
 	usersByEmail        map[string]uuid.UUID
@@ -56,7 +38,7 @@ type oneTimeToken struct {
 	usedAt    *time.Time
 }
 
-func newMemoryStore() (*memoryStore, error) {
+func New() (*Store, error) {
 	now := time.Now().UTC().Truncate(time.Second)
 	adminID := uuid.MustParse("00000000-0000-4000-8000-000000000001")
 	supportID := uuid.MustParse("00000000-0000-4000-8000-000000000002")
@@ -108,7 +90,7 @@ func newMemoryStore() (*memoryStore, error) {
 		},
 	}
 
-	store := &memoryStore{
+	store := &Store{
 		usersByID:           map[uuid.UUID]User{},
 		usersByEmail:        map[string]uuid.UUID{},
 		roles:               map[uuid.UUID][]AdminRole{adminID: {AdminRoleAdmin}, supportID: {AdminRoleSupport}, auditorID: {AdminRoleAuditor}},
@@ -156,7 +138,7 @@ func newMemoryStore() (*memoryStore, error) {
 	return store, nil
 }
 
-func (s *memoryStore) FindUserByEmail(_ context.Context, email string) (User, []string, error) {
+func (s *Store) FindUserByEmail(_ context.Context, email string) (User, []string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -169,7 +151,7 @@ func (s *memoryStore) FindUserByEmail(_ context.Context, email string) (User, []
 	return user, s.userLicensesLocked(user.ID), nil
 }
 
-func (s *memoryStore) FindUserByID(_ context.Context, userID uuid.UUID) (User, []string, error) {
+func (s *Store) FindUserByID(_ context.Context, userID uuid.UUID) (User, []string, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -181,7 +163,7 @@ func (s *memoryStore) FindUserByID(_ context.Context, userID uuid.UUID) (User, [
 	return user, s.userLicensesLocked(user.ID), nil
 }
 
-func (s *memoryStore) CreateUser(_ context.Context, name string, email string, passwordHash string) (User, error) {
+func (s *Store) CreateUser(_ context.Context, name string, email string, passwordHash string) (User, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -209,7 +191,7 @@ func (s *memoryStore) CreateUser(_ context.Context, name string, email string, p
 	return user, nil
 }
 
-func (s *memoryStore) GrantLicense(_ context.Context, userID uuid.UUID, productID string) ([]string, error) {
+func (s *Store) GrantLicense(_ context.Context, userID uuid.UUID, productID string) ([]string, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -224,7 +206,7 @@ func (s *memoryStore) GrantLicense(_ context.Context, userID uuid.UUID, productI
 	return s.userLicensesLocked(userID), nil
 }
 
-func (s *memoryStore) CreateRefreshSession(_ context.Context, tokenHash string, userID uuid.UUID, expiresAt time.Time) error {
+func (s *Store) CreateRefreshSession(_ context.Context, tokenHash string, userID uuid.UUID, expiresAt time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -232,7 +214,7 @@ func (s *memoryStore) CreateRefreshSession(_ context.Context, tokenHash string, 
 	return nil
 }
 
-func (s *memoryStore) FindRefreshSession(_ context.Context, tokenHash string) (uuid.UUID, error) {
+func (s *Store) FindRefreshSession(_ context.Context, tokenHash string) (uuid.UUID, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -244,7 +226,7 @@ func (s *memoryStore) FindRefreshSession(_ context.Context, tokenHash string) (u
 	return session.userID, nil
 }
 
-func (s *memoryStore) DeleteRefreshSession(_ context.Context, tokenHash string) error {
+func (s *Store) DeleteRefreshSession(_ context.Context, tokenHash string) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -252,7 +234,7 @@ func (s *memoryStore) DeleteRefreshSession(_ context.Context, tokenHash string) 
 	return nil
 }
 
-func (s *memoryStore) CreateEmailVerificationToken(_ context.Context, userID uuid.UUID, tokenHash string, expiresAt time.Time) error {
+func (s *Store) CreateEmailVerificationToken(_ context.Context, userID uuid.UUID, tokenHash string, expiresAt time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -263,7 +245,7 @@ func (s *memoryStore) CreateEmailVerificationToken(_ context.Context, userID uui
 	return nil
 }
 
-func (s *memoryStore) VerifyEmailToken(_ context.Context, tokenHash string, now time.Time) (User, error) {
+func (s *Store) VerifyEmailToken(_ context.Context, tokenHash string, now time.Time) (User, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -286,7 +268,7 @@ func (s *memoryStore) VerifyEmailToken(_ context.Context, tokenHash string, now 
 	return user, nil
 }
 
-func (s *memoryStore) CreatePasswordResetToken(_ context.Context, userID uuid.UUID, tokenHash string, expiresAt time.Time) error {
+func (s *Store) CreatePasswordResetToken(_ context.Context, userID uuid.UUID, tokenHash string, expiresAt time.Time) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -297,7 +279,7 @@ func (s *memoryStore) CreatePasswordResetToken(_ context.Context, userID uuid.UU
 	return nil
 }
 
-func (s *memoryStore) ResetPasswordByToken(_ context.Context, tokenHash string, passwordHash string, now time.Time) (User, error) {
+func (s *Store) ResetPasswordByToken(_ context.Context, tokenHash string, passwordHash string, now time.Time) (User, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -320,7 +302,7 @@ func (s *memoryStore) ResetPasswordByToken(_ context.Context, tokenHash string, 
 	return user, nil
 }
 
-func (s *memoryStore) RecordLoginAttempt(_ context.Context, attempt LoginAttempt) error {
+func (s *Store) RecordLoginAttempt(_ context.Context, attempt LoginAttempt) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -348,7 +330,7 @@ func (s *memoryStore) RecordLoginAttempt(_ context.Context, attempt LoginAttempt
 	return nil
 }
 
-func (s *memoryStore) GetAdminActor(_ context.Context, userID uuid.UUID) (AdminActor, error) {
+func (s *Store) GetAdminActor(_ context.Context, userID uuid.UUID) (AdminActor, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -372,7 +354,7 @@ func (s *memoryStore) GetAdminActor(_ context.Context, userID uuid.UUID) (AdminA
 	}, nil
 }
 
-func (s *memoryStore) ListUserRoles(_ context.Context, userID uuid.UUID) ([]AdminRole, []AdminPermission, error) {
+func (s *Store) ListUserRoles(_ context.Context, userID uuid.UUID) ([]AdminRole, []AdminPermission, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -384,7 +366,7 @@ func (s *memoryStore) ListUserRoles(_ context.Context, userID uuid.UUID) ([]Admi
 	return roles, permissionsForRoles(roles), nil
 }
 
-func (s *memoryStore) ListAdminUsers(_ context.Context, query AdminUserListQuery) (AdminUserListResult, error) {
+func (s *Store) ListAdminUsers(_ context.Context, query AdminUserListQuery) (AdminUserListResult, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -417,7 +399,7 @@ func (s *memoryStore) ListAdminUsers(_ context.Context, query AdminUserListQuery
 	}, nil
 }
 
-func (s *memoryStore) GetManagedUserDetail(_ context.Context, userID uuid.UUID) (ManagedUserDetail, error) {
+func (s *Store) GetManagedUserDetail(_ context.Context, userID uuid.UUID) (ManagedUserDetail, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -453,7 +435,7 @@ func (s *memoryStore) GetManagedUserDetail(_ context.Context, userID uuid.UUID) 
 	}, nil
 }
 
-func (s *memoryStore) SetUserStatus(_ context.Context, userID uuid.UUID, status UserStatus) (User, error) {
+func (s *Store) SetUserStatus(_ context.Context, userID uuid.UUID, status UserStatus) (User, error) {
 	if !validUserStatus(status) {
 		return User{}, errNotFound
 	}
@@ -471,7 +453,7 @@ func (s *memoryStore) SetUserStatus(_ context.Context, userID uuid.UUID, status 
 	return user, nil
 }
 
-func (s *memoryStore) SetUserRole(_ context.Context, userID uuid.UUID, role AdminRole) (User, error) {
+func (s *Store) SetUserRole(_ context.Context, userID uuid.UUID, role AdminRole) (User, error) {
 	if !validAdminRole(role) {
 		return User{}, errNotFound
 	}
@@ -490,7 +472,7 @@ func (s *memoryStore) SetUserRole(_ context.Context, userID uuid.UUID, role Admi
 	return user, nil
 }
 
-func (s *memoryStore) ListLoginAttempts(_ context.Context, query LoginAttemptListQuery) (LoginAttemptListResult, error) {
+func (s *Store) ListLoginAttempts(_ context.Context, query LoginAttemptListQuery) (LoginAttemptListResult, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -529,7 +511,7 @@ func (s *memoryStore) ListLoginAttempts(_ context.Context, query LoginAttemptLis
 	return LoginAttemptListResult{Items: items[start:end], Total: total, Page: page, PageSize: pageSize}, nil
 }
 
-func (s *memoryStore) ListSecurityEvents(_ context.Context, limit int) ([]SecurityEvent, error) {
+func (s *Store) ListSecurityEvents(_ context.Context, limit int) ([]SecurityEvent, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -544,7 +526,7 @@ func (s *memoryStore) ListSecurityEvents(_ context.Context, limit int) ([]Securi
 	return events, nil
 }
 
-func (s *memoryStore) GetDashboardStats(_ context.Context) (DashboardStats, error) {
+func (s *Store) GetDashboardStats(_ context.Context) (DashboardStats, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -600,7 +582,7 @@ func (s *memoryStore) GetDashboardStats(_ context.Context) (DashboardStats, erro
 	return stats, nil
 }
 
-func (s *memoryStore) GetSmtpSettings(_ context.Context) (SmtpSettings, error) {
+func (s *Store) GetSmtpSettings(_ context.Context) (SmtpSettings, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -609,7 +591,7 @@ func (s *memoryStore) GetSmtpSettings(_ context.Context) (SmtpSettings, error) {
 	return settings, nil
 }
 
-func (s *memoryStore) SaveSmtpSettings(_ context.Context, settings SmtpSettings) (SmtpSettings, error) {
+func (s *Store) SaveSmtpSettings(_ context.Context, settings SmtpSettings) (SmtpSettings, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -625,7 +607,7 @@ func (s *memoryStore) SaveSmtpSettings(_ context.Context, settings SmtpSettings)
 	return clean, nil
 }
 
-func (s *memoryStore) ListNotifications(_ context.Context, limit int) ([]Notification, error) {
+func (s *Store) ListNotifications(_ context.Context, limit int) ([]Notification, error) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
@@ -640,7 +622,7 @@ func (s *memoryStore) ListNotifications(_ context.Context, limit int) ([]Notific
 	return notifications, nil
 }
 
-func (s *memoryStore) CreateNotification(_ context.Context, notification Notification) error {
+func (s *Store) CreateNotification(_ context.Context, notification Notification) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -654,7 +636,7 @@ func (s *memoryStore) CreateNotification(_ context.Context, notification Notific
 	return nil
 }
 
-func (s *memoryStore) RecordAdminAuditEntry(_ context.Context, entry AdminAuditEntry) error {
+func (s *Store) RecordAdminAuditEntry(_ context.Context, entry AdminAuditEntry) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
@@ -668,12 +650,12 @@ func (s *memoryStore) RecordAdminAuditEntry(_ context.Context, entry AdminAuditE
 	return nil
 }
 
-func (s *memoryStore) putUserLocked(user User) {
+func (s *Store) putUserLocked(user User) {
 	s.usersByID[user.ID] = user
 	s.usersByEmail[normalizeEmail(user.Email)] = user.ID
 }
 
-func (s *memoryStore) userLicensesLocked(userID uuid.UUID) []string {
+func (s *Store) userLicensesLocked(userID uuid.UUID) []string {
 	licenseMap := s.licenses[userID]
 	licenses := make([]string, 0, len(licenseMap))
 	for productID := range licenseMap {
@@ -684,7 +666,7 @@ func (s *memoryStore) userLicensesLocked(userID uuid.UUID) []string {
 	return licenses
 }
 
-func (s *memoryStore) adminUserListItemLocked(user User) AdminUserListItem {
+func (s *Store) adminUserListItemLocked(user User) AdminUserListItem {
 	successful, failed := s.loginCountsLocked(user.ID)
 
 	return AdminUserListItem{
@@ -703,7 +685,7 @@ func (s *memoryStore) adminUserListItemLocked(user User) AdminUserListItem {
 	}
 }
 
-func (s *memoryStore) loginCountsLocked(userID uuid.UUID) (int, int) {
+func (s *Store) loginCountsLocked(userID uuid.UUID) (int, int) {
 	successful := 0
 	failed := 0
 	for _, attempt := range s.loginAttempts {
@@ -720,7 +702,7 @@ func (s *memoryStore) loginCountsLocked(userID uuid.UUID) (int, int) {
 	return successful, failed
 }
 
-func (s *memoryStore) loginAttemptsForUserLocked(userID uuid.UUID) []LoginAttempt {
+func (s *Store) loginAttemptsForUserLocked(userID uuid.UUID) []LoginAttempt {
 	attempts := []LoginAttempt{}
 	for _, attempt := range s.loginAttempts {
 		if attempt.UserID != nil && *attempt.UserID == userID {
@@ -731,7 +713,7 @@ func (s *memoryStore) loginAttemptsForUserLocked(userID uuid.UUID) []LoginAttemp
 	return attempts
 }
 
-func (s *memoryStore) detectSecurityEventsLocked(attempt LoginAttempt) {
+func (s *Store) detectSecurityEventsLocked(attempt LoginAttempt) {
 	if attempt.Success {
 		return
 	}
@@ -772,14 +754,6 @@ func (s *memoryStore) detectSecurityEventsLocked(attempt LoginAttempt) {
 			CountryCode:     attempt.CountryCode,
 		})
 	}
-}
-
-func normalizeEmail(email string) string {
-	return strings.ToLower(strings.TrimSpace(email))
-}
-
-func validUserStatus(status UserStatus) bool {
-	return status == UserStatusActive || status == UserStatusDisabled || status == UserStatusLocked
 }
 
 func matchesUserQuery(item AdminUserListItem, query AdminUserListQuery) bool {

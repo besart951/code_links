@@ -1,4 +1,4 @@
-package main
+package domain
 
 import (
 	"encoding/json"
@@ -20,13 +20,13 @@ func TestAdminAccessContractMatchesGoPolicy(t *testing.T) {
 	contract := loadAdminAccessContract(t)
 
 	for _, role := range contract.Roles {
-		if !validAdminRole(role) {
+		if !ValidAdminRole(role) {
 			t.Fatalf("contract role %q is not accepted by Go policy", role)
 		}
 	}
 
 	for _, role := range contract.AdminRoles {
-		got := permissionsByRole(role)
+		got := PermissionsByRole(role)
 		want := append([]AdminPermission{}, contract.RolePermissions[role]...)
 		sort.Slice(got, func(i, j int) bool { return got[i] < got[j] })
 		sort.Slice(want, func(i, j int) bool { return want[i] < want[j] })
@@ -38,7 +38,7 @@ func TestAdminAccessContractMatchesGoPolicy(t *testing.T) {
 
 func TestAdminAccessContractMatchesSQLSeed(t *testing.T) {
 	contract := loadAdminAccessContract(t)
-	content, err := os.ReadFile("migrations/004_auth_signup_smtp_notifications.sql")
+	content, err := os.ReadFile("../store/postgres/migrations/004_auth_signup_smtp_notifications.sql")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestAdminAccessContractMatchesSQLSeed(t *testing.T) {
 func loadAdminAccessContract(t *testing.T) adminAccessContract {
 	t.Helper()
 
-	content, err := os.ReadFile("../../../packages/config/admin-access.json")
+	content, err := os.ReadFile("../../../../../packages/config/admin-access.json")
 	if err != nil {
 		t.Fatal(err)
 	}

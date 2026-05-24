@@ -1,30 +1,32 @@
-package main
+package mail
 
 import (
 	"context"
 	"fmt"
 	"net/smtp"
+
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/domain"
 )
 
-type EmailMessage struct {
+type Message struct {
 	To      string
 	Subject string
 	Body    string
 }
 
-type EmailSender interface {
-	Send(ctx context.Context, settings SmtpSettings, message EmailMessage, password string) error
+type Sender interface {
+	Send(ctx context.Context, settings domain.SmtpSettings, message Message, password string) error
 }
 
-type NoopEmailSender struct{}
+type NoopSender struct{}
 
-func (NoopEmailSender) Send(_ context.Context, _ SmtpSettings, _ EmailMessage, _ string) error {
+func (NoopSender) Send(_ context.Context, _ domain.SmtpSettings, _ Message, _ string) error {
 	return nil
 }
 
-type SmtpEmailSender struct{}
+type SmtpSender struct{}
 
-func (SmtpEmailSender) Send(_ context.Context, settings SmtpSettings, message EmailMessage, password string) error {
+func (SmtpSender) Send(_ context.Context, settings domain.SmtpSettings, message Message, password string) error {
 	if !settings.Active {
 		return nil
 	}

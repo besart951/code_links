@@ -38,7 +38,7 @@ func TestProductCatalogMatchesTypeScriptConfig(t *testing.T) {
 }
 
 func TestAuthSchemaProductConstraintMatchesCatalog(t *testing.T) {
-	content, err := os.ReadFile("../../apps/auth-service/backend/migrations/001_auth_schema.sql")
+	content, err := os.ReadFile("../../apps/auth-service/backend/internal/store/postgres/migrations/001_auth_schema.sql")
 	if err != nil {
 		t.Fatal(err)
 	}

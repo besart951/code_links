@@ -1,6 +1,8 @@
-package main
+package domain
 
 import (
+	"errors"
+	"strings"
 	"time"
 
 	"github.com/besart951/code-links/packages/adminaccess"
@@ -235,4 +237,64 @@ type DashboardStats struct {
 type CountStat struct {
 	Key   string `json:"key"`
 	Count int    `json:"count"`
+}
+
+var (
+	ErrNotFound  = errors.New("not found")
+	ErrConflict  = errors.New("conflict")
+	ErrForbidden = errors.New("forbidden")
+)
+
+func NormalizeEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
+func PermissionsForRoles(roles []AdminRole) []AdminPermission {
+	roleValues := make([]string, 0, len(roles))
+	for _, role := range roles {
+		roleValues = append(roleValues, string(role))
+	}
+	return adminPermissions(adminaccess.PermissionsForRoles(roleValues))
+}
+
+func PermissionsByRole(role AdminRole) []AdminPermission {
+	return adminPermissions(adminaccess.PermissionsForRole(string(role)))
+}
+
+func adminPermissions(values []string) []AdminPermission {
+	permissions := make([]AdminPermission, 0, len(values))
+	for _, value := range values {
+		permissions = append(permissions, AdminPermission(value))
+	}
+	return permissions
+}
+
+func ValidAdminRole(role AdminRole) bool {
+	return adminaccess.IsRole(string(role))
+}
+
+func ValidUserStatus(status UserStatus) bool {
+	return status == UserStatusActive || status == UserStatusDisabled || status == UserStatusLocked
+}
+
+func PrimaryRole(roles []AdminRole) AdminRole {
+	for _, preferred := range []AdminRole{AdminRoleAdmin, AdminRoleSupport, AdminRoleAuditor, AdminRoleUser} {
+		for _, role := range roles {
+			if role == preferred {
+				return preferred
+			}
+		}
+	}
+
+	return AdminRoleUser
+}
+
+func HasAdminPermission(actor AdminActor, permission AdminPermission) bool {
+	for _, grant := range actor.Permissions {
+		if grant == permission {
+			return true
+		}
+	}
+
+	return false
 }

@@ -1,13 +1,22 @@
-package main
+package httpapi
 
 import (
 	"bytes"
+	"context"
 	"crypto/sha256"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	adminsvc "github.com/besart951/code-links/apps/auth-service/backend/internal/admin"
+	authsvc "github.com/besart951/code-links/apps/auth-service/backend/internal/auth"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/domain"
+	appmail "github.com/besart951/code-links/apps/auth-service/backend/internal/mail"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/secret"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/memory"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/token"
 )
 
 func TestLoginReturnsAccessTokenAndJWKS(t *testing.T) {
@@ -87,9 +96,12 @@ func TestSignupRequiresEmailVerificationBeforeLogin(t *testing.T) {
 		t.Fatalf("expected verified login 200, got %d: %s", loginAfterVerify.Code, loginAfterVerify.Body.String())
 	}
 
-	store := server.store.(*memoryStore)
-	if len(store.loginAttempts) < 2 {
-		t.Fatalf("expected login attempts to be recorded, got %d", len(store.loginAttempts))
+	attempts, err := server.store.ListLoginAttempts(context.Background(), domain.LoginAttemptListQuery{Page: 1, PageSize: 10})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if attempts.Total < 2 {
+		t.Fatalf("expected login attempts to be recorded, got %d", attempts.Total)
 	}
 }
 
@@ -198,12 +210,15 @@ func TestSMTPSettingsAreEncryptedAndSupportCannotUpdate(t *testing.T) {
 		t.Fatalf("expected smtp update 200, got %d: %s", updateRecorder.Code, updateRecorder.Body.String())
 	}
 
-	store := server.store.(*memoryStore)
-	encrypted := store.smtpSettings.PasswordEncrypted
+	settings, err := server.store.GetSmtpSettings(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	encrypted := settings.PasswordEncrypted
 	if encrypted == "" || encrypted == "smtp-secret" {
 		t.Fatalf("expected encrypted smtp password, got %q", encrypted)
 	}
-	decrypted, err := decryptSecret(encrypted, server.config.SMTPSecretKey)
+	decrypted, err := secret.Decrypt(encrypted, server.smtpSecretKey)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -229,6 +244,13 @@ func TestSMTPSettingsAreEncryptedAndSupportCannotUpdate(t *testing.T) {
 	}
 }
 
+func TestServerCanUseRealEmailSender(t *testing.T) {
+	var sender appmail.Sender = appmail.SmtpSender{}
+	if _, ok := sender.(appmail.SmtpSender); !ok {
+		t.Fatal("expected SMTP email sender")
+	}
+}
+
 func TestAdminAPIMasksIPMetadataWithoutRawPermission(t *testing.T) {
 	server := newTestServer(t)
 	auditorLogin := loginAndDecode(t, server, "auditor@codelinks.dev", "password")
@@ -241,7 +263,7 @@ func TestAdminAPIMasksIPMetadataWithoutRawPermission(t *testing.T) {
 		t.Fatalf("expected login attempts 200, got %d: %s", attemptsRecorder.Code, attemptsRecorder.Body.String())
 	}
 
-	var attempts LoginAttemptListResult
+	var attempts domain.LoginAttemptListResult
 	if err := json.NewDecoder(attemptsRecorder.Body).Decode(&attempts); err != nil {
 		t.Fatal(err)
 	}
@@ -260,7 +282,7 @@ func TestAdminAPIMasksIPMetadataWithoutRawPermission(t *testing.T) {
 		t.Fatalf("expected dashboard stats 200, got %d: %s", statsRecorder.Code, statsRecorder.Body.String())
 	}
 
-	var stats DashboardStats
+	var stats domain.DashboardStats
 	if err := json.NewDecoder(statsRecorder.Body).Decode(&stats); err != nil {
 		t.Fatal(err)
 	}
@@ -317,39 +339,55 @@ func TestMockPurchaseRouteRequiresExplicitDevMode(t *testing.T) {
 	}
 }
 
-func newTestServer(t *testing.T) *server {
+type testServer struct {
+	*Server
+	store         *memory.Store
+	smtpSecretKey []byte
+}
+
+func (s *testServer) routes() http.Handler {
+	return s.Handler()
+}
+
+func newTestServer(t *testing.T) *testServer {
 	return newTestServerWithMockPurchase(t, true)
 }
 
-func newTestServerWithMockPurchase(t *testing.T, enableMockPurchase bool) *server {
+func newTestServerWithMockPurchase(t *testing.T, enableMockPurchase bool) *testServer {
 	t.Helper()
 
-	store, err := newMemoryStore()
+	store, err := memory.New()
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	config := config{
-		Issuer:               "http://auth.codelinks.localhost",
-		Audience:             "codelinks-products",
+	key := sha256.Sum256([]byte("test-smtp-secret"))
+	signer, err := token.NewSigner(token.Config{
+		KeyID:    "test-key",
+		Issuer:   "http://auth.codelinks.localhost",
+		Audience: "codelinks-products",
+		Lifetime: 15 * time.Minute,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	authService := authsvc.NewService(authsvc.Config{
 		Environment:          "test",
 		PublicFrontendURL:    "http://auth.codelinks.localhost",
-		EnableMockPurchase:   enableMockPurchase,
-		AccessTokenLifetime:  15 * time.Minute,
 		RefreshTokenLifetime: time.Hour,
-		JWTKeyID:             "test-key",
-	}
-	key := sha256.Sum256([]byte("test-smtp-secret"))
-	config.SMTPSecretKey = key[:]
-	signer, err := newTokenSigner(config)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	return newServer(config, store, signer)
+	}, store, store, store, signer)
+	adminService := adminsvc.NewService(adminsvc.Config{
+		SMTPSecretKey: key[:],
+	}, store, store, store, store, store, signer, appmail.NoopSender{})
+	server := NewServer(Config{
+		EnableMockPurchase: enableMockPurchase,
+		PublicFrontendURL:  "http://auth.codelinks.localhost",
+	}, authService, adminService, signer)
+	return &testServer{Server: server, store: store, smtpSecretKey: key[:]}
 }
 
-func loginAndDecode(t *testing.T, server *server, email string, password string) sessionResponse {
+func loginAndDecode(t *testing.T, server *testServer, email string, password string) sessionResponse {
 	t.Helper()
 
 	recorder := httptest.NewRecorder()

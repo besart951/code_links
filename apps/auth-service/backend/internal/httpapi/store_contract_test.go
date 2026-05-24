@@ -1,4 +1,4 @@
-package main
+package httpapi
 
 import (
 	"context"
@@ -9,12 +9,25 @@ import (
 	"testing"
 	"time"
 
+	adminsvc "github.com/besart951/code-links/apps/auth-service/backend/internal/admin"
+	authsvc "github.com/besart951/code-links/apps/auth-service/backend/internal/auth"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/domain"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/secret"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/memory"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/postgres"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
+type contractStore interface {
+	authsvc.Store
+	authsvc.RoleStore
+	adminsvc.Store
+	adminsvc.SettingsStore
+}
+
 func TestStoreContractMemory(t *testing.T) {
-	store, err := newMemoryStore()
+	store, err := memory.New()
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,7 +41,7 @@ func TestStoreContractPostgres(t *testing.T) {
 		t.Skip("set CODELINKS_TEST_DATABASE_URL to run Postgres store contract tests")
 	}
 
-	store, cleanup, err := openStore(context.Background(), config{DatabaseURL: databaseURL})
+	store, cleanup, err := postgres.Open(context.Background(), databaseURL)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -37,7 +50,7 @@ func TestStoreContractPostgres(t *testing.T) {
 	runStoreContract(t, store)
 }
 
-func runStoreContract(t *testing.T, store Store) {
+func runStoreContract(t *testing.T, store contractStore) {
 	t.Helper()
 	ctx := context.Background()
 	now := time.Now().UTC()
@@ -69,7 +82,7 @@ func runStoreContract(t *testing.T, store Store) {
 		t.Fatalf("expected infra-link license, got %#v", licenses)
 	}
 
-	verificationToken := hashOpaqueToken(uuid.NewString())
+	verificationToken := secret.HashOpaqueToken(uuid.NewString())
 	if err := store.CreateEmailVerificationToken(ctx, user.ID, verificationToken, now.Add(time.Hour)); err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +94,7 @@ func runStoreContract(t *testing.T, store Store) {
 		t.Fatal("expected email verification timestamp")
 	}
 
-	resetToken := hashOpaqueToken(uuid.NewString())
+	resetToken := secret.HashOpaqueToken(uuid.NewString())
 	if err := store.CreatePasswordResetToken(ctx, user.ID, resetToken, now.Add(time.Hour)); err != nil {
 		t.Fatal(err)
 	}
@@ -92,7 +105,7 @@ func runStoreContract(t *testing.T, store Store) {
 		t.Fatal("expected used reset token to fail")
 	}
 
-	refreshTokenHash := hashRefreshToken(uuid.NewString())
+	refreshTokenHash := secret.HashRefreshToken(uuid.NewString())
 	if err := store.CreateRefreshSession(ctx, refreshTokenHash, user.ID, now.Add(time.Hour)); err != nil {
 		t.Fatal(err)
 	}
@@ -108,7 +121,7 @@ func runStoreContract(t *testing.T, store Store) {
 	}
 
 	ipHash := sha256.Sum256([]byte("192.0.2.10"))
-	if err := store.RecordLoginAttempt(ctx, LoginAttempt{
+	if err := store.RecordLoginAttempt(ctx, domain.LoginAttempt{
 		ID:             uuid.New(),
 		UserID:         &user.ID,
 		EmailAttempted: email,
@@ -122,7 +135,7 @@ func runStoreContract(t *testing.T, store Store) {
 	}); err != nil {
 		t.Fatal(err)
 	}
-	result, err := store.ListLoginAttempts(ctx, LoginAttemptListQuery{UserID: &user.ID, Page: 1, PageSize: 10})
+	result, err := store.ListLoginAttempts(ctx, domain.LoginAttemptListQuery{UserID: &user.ID, Page: 1, PageSize: 10})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,13 +143,13 @@ func runStoreContract(t *testing.T, store Store) {
 		t.Fatal("expected recorded login attempt")
 	}
 
-	if _, err := store.SetUserRole(ctx, user.ID, AdminRoleSupport); err != nil {
+	if _, err := store.SetUserRole(ctx, user.ID, domain.AdminRoleSupport); err != nil {
 		t.Fatal(err)
 	}
-	users, err := store.ListAdminUsers(ctx, AdminUserListQuery{
+	users, err := store.ListAdminUsers(ctx, domain.AdminUserListQuery{
 		Query:     "contract",
-		Role:      string(AdminRoleSupport),
-		Status:    UserStatusActive,
+		Role:      string(domain.AdminRoleSupport),
+		Status:    domain.UserStatusActive,
 		Page:      1,
 		PageSize:  1,
 		Sort:      "email",
@@ -148,7 +161,7 @@ func runStoreContract(t *testing.T, store Store) {
 	if users.Total != 1 || len(users.Items) != 1 {
 		t.Fatalf("expected one filtered admin user, got total=%d items=%d", users.Total, len(users.Items))
 	}
-	if users.Items[0].Email != email || users.Items[0].PrimaryRole != AdminRoleSupport {
+	if users.Items[0].Email != email || users.Items[0].PrimaryRole != domain.AdminRoleSupport {
 		t.Fatalf("unexpected admin user projection: %#v", users.Items[0])
 	}
 	if users.Items[0].SuccessfulLoginCount != 1 || users.Items[0].FailedLoginCount != 0 {

@@ -1,4 +1,5 @@
 import { spawn } from 'node:child_process';
+import path from 'node:path';
 import process from 'node:process';
 
 const isWindows = process.platform === 'win32';
@@ -21,11 +22,16 @@ const env = {
 
 const pnpmExecPath = process.env.npm_execpath;
 const canReusePnpm = pnpmExecPath?.toLowerCase().includes('pnpm') ?? false;
+const pnpmExecExtension = canReusePnpm ? path.extname(pnpmExecPath).toLowerCase() : '';
+const pnpmExecIsJS = ['.js', '.cjs', '.mjs'].includes(pnpmExecExtension);
+const pnpmExecNeedsShell = ['.cmd', '.bat'].includes(pnpmExecExtension);
 
 const child = canReusePnpm
-	? spawn(process.execPath, [pnpmExecPath, ...args], { stdio: 'inherit', env })
+	? pnpmExecIsJS
+		? spawn(process.execPath, [pnpmExecPath, ...args], { stdio: 'inherit', env })
+		: spawn(pnpmExecPath, args, { stdio: 'inherit', env, shell: pnpmExecNeedsShell })
 	: isWindows
-		? spawn(`pnpm ${args.join(' ')}`, { stdio: 'inherit', shell: true, env })
+		? spawn('pnpm', args, { stdio: 'inherit', shell: true, env })
 		: spawn('pnpm', args, { stdio: 'inherit', env });
 
 for (const signal of ['SIGINT', 'SIGTERM']) {

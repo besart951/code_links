@@ -3,6 +3,7 @@ package auth
 import (
 	"context"
 	"errors"
+	"fmt"
 	"testing"
 	"time"
 
@@ -48,7 +49,7 @@ func TestServiceSignupLoginRefreshAndReset(t *testing.T) {
 	if refreshed.AccessToken == "" || refreshed.RefreshToken == "" {
 		t.Fatal("expected refreshed session")
 	}
-	if _, err := service.Refresh(ctx, session.RefreshToken); !isKind(err, KindUnauthorized) {
+	if _, err := service.Refresh(ctx, session.RefreshToken); !isKind(err, KindRefreshReuse) {
 		t.Fatalf("expected consumed refresh token to be rejected, got %v", err)
 	}
 
@@ -67,7 +68,108 @@ func TestServiceSignupLoginRefreshAndReset(t *testing.T) {
 	}
 }
 
+func TestLoginProtectionRateLimitsByEmail(t *testing.T) {
+	service := newTestService(t)
+	ctx := context.Background()
+	input := LoginInput{
+		Email:    "demo@codelinks.dev",
+		Password: "wrong-password",
+		Attempt:  LoginAttemptMetadata{IPAddress: "192.0.2.10", CountryCode: "CH"},
+	}
+
+	for attempt := 0; attempt < 5; attempt++ {
+		if _, err := service.Login(ctx, input); !isKind(err, KindUnauthorized) {
+			t.Fatalf("expected unauthorized attempt %d, got %v", attempt+1, err)
+		}
+	}
+	if _, err := service.Login(ctx, input); !isKind(err, KindRateLimited) {
+		t.Fatalf("expected rate limit, got %v", err)
+	}
+}
+
+func TestLoginProtectionRateLimitsByIP(t *testing.T) {
+	service := newTestService(t)
+	ctx := context.Background()
+
+	for attempt := 0; attempt < 10; attempt++ {
+		_, err := service.Login(ctx, LoginInput{
+			Email:    fmt.Sprintf("unknown-%d@example.com", attempt),
+			Password: "wrong-password",
+			Attempt:  LoginAttemptMetadata{IPAddress: "192.0.2.11", CountryCode: "CH"},
+		})
+		if !isKind(err, KindUnauthorized) {
+			t.Fatalf("expected unauthorized attempt %d, got %v", attempt+1, err)
+		}
+	}
+	_, err := service.Login(ctx, LoginInput{
+		Email:    "another-unknown@example.com",
+		Password: "wrong-password",
+		Attempt:  LoginAttemptMetadata{IPAddress: "192.0.2.11", CountryCode: "CH"},
+	})
+	if !isKind(err, KindRateLimited) {
+		t.Fatalf("expected IP rate limit, got %v", err)
+	}
+}
+
+func TestExpiredTemporaryLockIsClearedOnSuccessfulLogin(t *testing.T) {
+	service, store := newTestServiceWithStore(t)
+	ctx := context.Background()
+	user, _, err := store.FindUserByEmail(ctx, "demo@codelinks.dev")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.SetUserTemporaryLock(ctx, user.ID, time.Now().UTC().Add(-time.Minute)); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := service.Login(ctx, LoginInput{
+		Email:    "demo@codelinks.dev",
+		Password: "password",
+		Attempt:  LoginAttemptMetadata{IPAddress: "192.0.2.12", CountryCode: "CH"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	user, _, err = store.FindUserByEmail(ctx, "demo@codelinks.dev")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if user.LockedUntil != nil {
+		t.Fatalf("expected temporary lock to be cleared, got %v", user.LockedUntil)
+	}
+}
+
+func TestRefreshTokenReuseRevokesActiveSessions(t *testing.T) {
+	service := newTestService(t)
+	ctx := context.Background()
+	first, err := service.Login(ctx, LoginInput{
+		Email:    "demo@codelinks.dev",
+		Password: "password",
+		Attempt:  LoginAttemptMetadata{IPAddress: "192.0.2.13", CountryCode: "CH"},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := service.Refresh(ctx, first.RefreshToken)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.Refresh(ctx, first.RefreshToken); !isKind(err, KindRefreshReuse) {
+		t.Fatalf("expected refresh reuse error, got %v", err)
+	}
+	if _, err := service.Refresh(ctx, second.RefreshToken); !isKind(err, KindUnauthorized) {
+		t.Fatalf("expected revoked active refresh token to fail, got %v", err)
+	}
+}
+
 func newTestService(t *testing.T) *Service {
+	t.Helper()
+
+	service, _ := newTestServiceWithStore(t)
+	return service
+}
+
+func newTestServiceWithStore(t *testing.T) (*Service, *memory.Store) {
 	t.Helper()
 
 	store, err := memory.New()
@@ -87,7 +189,7 @@ func newTestService(t *testing.T) *Service {
 		Environment:          "test",
 		PublicFrontendURL:    "http://auth.codelinks.localhost",
 		RefreshTokenLifetime: time.Hour,
-	}, store, store, store, signer)
+	}, store, store, store, signer), store
 }
 
 func isKind(err error, kind Kind) bool {

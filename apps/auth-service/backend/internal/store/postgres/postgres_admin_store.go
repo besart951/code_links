@@ -257,7 +257,7 @@ func (s *Store) SetUserStatus(ctx context.Context, userID uuid.UUID, status User
 
 	return s.scanUser(ctx, `
 		select id, email, name, password_hash, status, email_verified_at, created_at, updated_at,
-		       last_login_at, coalesce(last_login_ip::text, ''), coalesce(last_login_country_code::text, '')
+		       locked_until, last_login_at, coalesce(last_login_ip::text, ''), coalesce(last_login_country_code::text, '')
 		from users
 		where id = $1
 	`, userID)

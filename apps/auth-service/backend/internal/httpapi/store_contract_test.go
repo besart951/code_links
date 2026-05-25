@@ -116,15 +116,30 @@ func runStoreContract(t *testing.T, store contractStore) {
 	if foundUserID != user.ID {
 		t.Fatalf("expected refresh session for %s, got %s", user.ID, foundUserID)
 	}
-	consumedUserID, err := store.ConsumeRefreshSession(ctx, refreshTokenHash)
+	consumed, err := store.ConsumeRefreshSession(ctx, refreshTokenHash)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if consumedUserID != user.ID {
-		t.Fatalf("expected consumed refresh session for %s, got %s", user.ID, consumedUserID)
+	if consumed.UserID != user.ID || consumed.Reused {
+		t.Fatalf("expected fresh consumed refresh session for %s, got %#v", user.ID, consumed)
 	}
-	if _, err := store.ConsumeRefreshSession(ctx, refreshTokenHash); err == nil {
-		t.Fatal("expected consumed refresh session to fail")
+	reused, err := store.ConsumeRefreshSession(ctx, refreshTokenHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reused.UserID != user.ID || !reused.Reused {
+		t.Fatalf("expected refresh reuse result for %s, got %#v", user.ID, reused)
+	}
+
+	refreshTokenHash = secret.HashRefreshToken(uuid.NewString())
+	if err := store.CreateRefreshSession(ctx, refreshTokenHash, user.ID, now.Add(time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.RevokeRefreshSessionsForUser(ctx, user.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.FindRefreshSession(ctx, refreshTokenHash); err == nil {
+		t.Fatal("expected revoked refresh session to be removed")
 	}
 
 	refreshTokenHash = secret.HashRefreshToken(uuid.NewString())
@@ -147,6 +162,54 @@ func runStoreContract(t *testing.T, store contractStore) {
 		Success:        true,
 		AuthMethod:     "password",
 		RiskScore:      8,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	failureReason := domain.LoginFailureWrongPassword
+	if err := store.RecordLoginAttempt(ctx, domain.LoginAttempt{
+		ID:             uuid.New(),
+		UserID:         &user.ID,
+		EmailAttempted: email,
+		OccurredAt:     now,
+		IPAddress:      "192.0.2.10",
+		IPHash:         base64.RawURLEncoding.EncodeToString(ipHash[:]),
+		CountryCode:    "CH",
+		Success:        false,
+		FailureReason:  &failureReason,
+		AuthMethod:     "password",
+		RiskScore:      65,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	counts, err := store.CountRecentFailedLoginAttempts(ctx, email, base64.RawURLEncoding.EncodeToString(ipHash[:]), now.Add(-time.Minute))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if counts.Email != 1 || counts.IP != 1 {
+		t.Fatalf("unexpected failure counts: %#v", counts)
+	}
+	lockUntil := now.Add(15 * time.Minute)
+	if err := store.SetUserTemporaryLock(ctx, user.ID, lockUntil); err != nil {
+		t.Fatal(err)
+	}
+	lockedUser, _, err := store.FindUserByID(ctx, user.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if lockedUser.LockedUntil == nil {
+		t.Fatal("expected temporary lock")
+	}
+	if err := store.ClearUserTemporaryLock(ctx, user.ID); err != nil {
+		t.Fatal(err)
+	}
+	if err := store.RecordSecurityEvent(ctx, domain.SecurityEvent{
+		ID:         uuid.New(),
+		UserID:     &user.ID,
+		Type:       domain.SecurityEventLoginRateLimited,
+		Severity:   "high",
+		Status:     "open",
+		Summary:    "rate limited",
+		DetectedAt: now,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -179,7 +242,7 @@ func runStoreContract(t *testing.T, store contractStore) {
 	if users.Items[0].Email != email || users.Items[0].PrimaryRole != domain.AdminRoleSupport {
 		t.Fatalf("unexpected admin user projection: %#v", users.Items[0])
 	}
-	if users.Items[0].SuccessfulLoginCount != 1 || users.Items[0].FailedLoginCount != 0 {
+	if users.Items[0].SuccessfulLoginCount != 1 || users.Items[0].FailedLoginCount != 1 {
 		t.Fatalf("unexpected login counts: %#v", users.Items[0])
 	}
 }

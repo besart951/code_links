@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { parseLoginAttemptQuery, parseRole, parseUserListQuery, parseUserStatus } from './admin-route-helpers';
+import { AdminApiError } from '$lib/infrastructure/api/AuthServiceAdminApiRepository';
+import {
+	adminActionFailure,
+	parseLoginAttemptQuery,
+	parseRole,
+	parseUserListQuery,
+	parseUserStatus
+} from './admin-route-helpers';
 
 describe('admin route helpers', () => {
 	it('parses user list filters with safe defaults', () => {
@@ -26,5 +33,16 @@ describe('admin route helpers', () => {
 		expect(
 			parseLoginAttemptQuery(new URL('http://admin-link.localhost/admin/login-history?query=demo&success=false'))
 		).toMatchObject({ query: 'demo', success: false, page: 1, pageSize: 50 });
+	});
+
+	it('maps structured admin api errors to action failures', () => {
+		const result = adminActionFailure(new AdminApiError(403, 'forbidden', 'Admin role required'));
+
+		expect(result.status).toBe(403);
+		expect(result.data).toMatchObject({
+			error: true,
+			message: 'Admin role required',
+			code: 'forbidden'
+		});
 	});
 });

@@ -49,7 +49,7 @@ func (s *Server) handleUserInfoLookup(w http.ResponseWriter, r *http.Request) {
 func writeUserInfoError(w http.ResponseWriter, err error) {
 	var serviceError *userinfo.Error
 	if !errors.As(err, &serviceError) {
-		writeError(w, http.StatusInternalServerError, "internal server error")
+		writeErrorCode(w, http.StatusInternalServerError, "internal", "internal server error")
 		return
 	}
 
@@ -60,5 +60,5 @@ func writeUserInfoError(w http.ResponseWriter, err error) {
 	case userinfo.KindUnauthorized:
 		status = http.StatusUnauthorized
 	}
-	writeError(w, status, serviceError.Message)
+	writeErrorCode(w, status, string(serviceError.Kind), serviceError.Message)
 }

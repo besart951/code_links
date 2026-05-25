@@ -6,17 +6,19 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/besart951/code-links/packages/productauth"
 )
 
 type Config struct {
-	Port      string
-	ProductID string
-	JWKSURL   string
-	Issuer    string
-	Audience  string
+	Port           string
+	ProductID      string
+	JWKSURL        string
+	Issuer         string
+	Audience       string
+	AllowedOrigins []string
 }
 
 type RouteRegistrar func(*http.ServeMux, RouteTools)
@@ -35,11 +37,12 @@ func Main(defaultProductID string, defaultPort string) {
 
 func LoadConfig(defaultProductID string, defaultPort string) Config {
 	return Config{
-		Port:      env("PORT", defaultPort),
-		ProductID: env("PRODUCT_ID", defaultProductID),
-		JWKSURL:   env("AUTH_JWKS_URL", "http://localhost:8080/.well-known/jwks.json"),
-		Issuer:    env("JWT_ISSUER", "http://auth.codelinks.localhost"),
-		Audience:  env("JWT_AUDIENCE", "codelinks-products"),
+		Port:           env("PORT", defaultPort),
+		ProductID:      env("PRODUCT_ID", defaultProductID),
+		JWKSURL:        env("AUTH_JWKS_URL", "http://localhost:8080/.well-known/jwks.json"),
+		Issuer:         env("JWT_ISSUER", "http://auth.codelinks.localhost"),
+		Audience:       env("JWT_AUDIENCE", "codelinks-products"),
+		AllowedOrigins: splitCSV(os.Getenv("PRODUCT_ALLOWED_ORIGINS")),
 	}
 }
 
@@ -86,7 +89,7 @@ func Handler(config Config, validator *productauth.RemoteValidator, registrars .
 		registrar(mux, tools)
 	}
 
-	return withCORS(mux)
+	return withCORS(mux, config.AllowedOrigins)
 }
 
 func connectValidator(ctx context.Context, config Config) (*productauth.RemoteValidator, error) {
@@ -108,12 +111,17 @@ func connectValidator(ctx context.Context, config Config) (*productauth.RemoteVa
 	return nil, lastErr
 }
 
-func withCORS(next http.Handler) http.Handler {
+func withCORS(next http.Handler, allowedOrigins []string) http.Handler {
+	allowed := make(map[string]bool, len(allowedOrigins))
+	for _, origin := range allowedOrigins {
+		if origin != "" {
+			allowed[origin] = true
+		}
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
-		if origin != "" {
+		if allowed[origin] {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
-			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Vary", "Origin")
 		}
 		w.Header().Set("Access-Control-Allow-Headers", "authorization, content-type")
@@ -138,4 +146,16 @@ func env(key string, fallback string) string {
 		return fallback
 	}
 	return value
+}
+
+func splitCSV(value string) []string {
+	parts := strings.Split(value, ",")
+	items := make([]string, 0, len(parts))
+	for _, part := range parts {
+		trimmed := strings.TrimSpace(part)
+		if trimmed != "" {
+			items = append(items, trimmed)
+		}
+	}
+	return items
 }

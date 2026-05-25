@@ -13,7 +13,7 @@ import (
 func (s *Store) FindUserByEmail(ctx context.Context, email string) (User, []string, error) {
 	user, err := s.scanUser(ctx, `
 		select id, email, name, password_hash, status, email_verified_at, created_at, updated_at,
-		       last_login_at, coalesce(last_login_ip::text, ''), coalesce(last_login_country_code::text, '')
+		       locked_until, last_login_at, coalesce(last_login_ip::text, ''), coalesce(last_login_country_code::text, '')
 		from users
 		where lower(email) = lower($1)
 	`, email)
@@ -28,7 +28,7 @@ func (s *Store) FindUserByEmail(ctx context.Context, email string) (User, []stri
 func (s *Store) FindUserByID(ctx context.Context, userID uuid.UUID) (User, []string, error) {
 	user, err := s.scanUser(ctx, `
 		select id, email, name, password_hash, status, email_verified_at, created_at, updated_at,
-		       last_login_at, coalesce(last_login_ip::text, ''), coalesce(last_login_country_code::text, '')
+		       locked_until, last_login_at, coalesce(last_login_ip::text, ''), coalesce(last_login_country_code::text, '')
 		from users
 		where id = $1
 	`, userID)
@@ -88,7 +88,7 @@ func (s *Store) CreateUser(ctx context.Context, name string, email string, passw
 		insert into users (email, name, password_hash, status)
 		values (lower($1), $2, $3, 'active')
 		returning id, email, name, password_hash, status, email_verified_at, created_at, updated_at,
-		          last_login_at, coalesce(last_login_ip::text, ''), coalesce(last_login_country_code::text, '')
+		          locked_until, last_login_at, coalesce(last_login_ip::text, ''), coalesce(last_login_country_code::text, '')
 	`, email, name, passwordHash).Scan(
 		&user.ID,
 		&user.Email,
@@ -98,6 +98,7 @@ func (s *Store) CreateUser(ctx context.Context, name string, email string, passw
 		&user.EmailVerifiedAt,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&user.LockedUntil,
 		&user.LastLoginAt,
 		&user.LastLoginIP,
 		&user.LastLoginCountryCode,
@@ -150,6 +151,7 @@ func (s *Store) FindRefreshSession(ctx context.Context, tokenHash string) (uuid.
 		from refresh_sessions
 		where token_hash = $1
 		  and expires_at > now()
+		  and consumed_at is null
 	`, tokenHash).Scan(&userID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return uuid.Nil, errNotFound
@@ -158,19 +160,46 @@ func (s *Store) FindRefreshSession(ctx context.Context, tokenHash string) (uuid.
 	return userID, err
 }
 
-func (s *Store) ConsumeRefreshSession(ctx context.Context, tokenHash string) (uuid.UUID, error) {
+func (s *Store) ConsumeRefreshSession(ctx context.Context, tokenHash string) (RefreshSessionConsumeResult, error) {
 	var userID uuid.UUID
 	err := s.pool.QueryRow(ctx, `
-		delete from refresh_sessions
+		update refresh_sessions
+		set consumed_at = now()
 		where token_hash = $1
 		  and expires_at > now()
+		  and consumed_at is null
 		returning user_id
 	`, tokenHash).Scan(&userID)
-	if errors.Is(err, pgx.ErrNoRows) {
-		return uuid.Nil, errNotFound
+	if err == nil {
+		return RefreshSessionConsumeResult{UserID: userID}, nil
+	}
+	if !errors.Is(err, pgx.ErrNoRows) {
+		return RefreshSessionConsumeResult{}, err
 	}
 
-	return userID, err
+	err = s.pool.QueryRow(ctx, `
+		select user_id
+		from refresh_sessions
+		where token_hash = $1
+		  and consumed_at is not null
+	`, tokenHash).Scan(&userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return RefreshSessionConsumeResult{}, errNotFound
+	}
+	if err != nil {
+		return RefreshSessionConsumeResult{}, err
+	}
+
+	return RefreshSessionConsumeResult{UserID: userID, Reused: true}, nil
+}
+
+func (s *Store) RevokeRefreshSessionsForUser(ctx context.Context, userID uuid.UUID) error {
+	_, err := s.pool.Exec(ctx, `
+		delete from refresh_sessions
+		where user_id = $1
+		  and consumed_at is null
+	`, userID)
+	return err
 }
 
 func (s *Store) DeleteRefreshSession(ctx context.Context, tokenHash string) error {
@@ -292,5 +321,72 @@ func (s *Store) RecordLoginAttempt(ctx context.Context, attempt LoginAttempt) er
 		`, *attempt.UserID, attempt.OccurredAt, attempt.IPAddress, attempt.CountryCode)
 	}
 
+	return err
+}
+
+func (s *Store) CountRecentFailedLoginAttempts(ctx context.Context, email string, ipHash string, since time.Time) (LoginFailureCounts, error) {
+	var counts LoginFailureCounts
+	err := s.pool.QueryRow(ctx, `
+		select count(*) filter (where lower(email_attempted) = lower($1)),
+		       count(*) filter (where ip_hash = $2)
+		from login_attempts
+		where success = false
+		  and occurred_at >= $3
+		  and (lower(email_attempted) = lower($1) or ip_hash = $2)
+	`, email, ipHash, since).Scan(&counts.Email, &counts.IP)
+	return counts, err
+}
+
+func (s *Store) SetUserTemporaryLock(ctx context.Context, userID uuid.UUID, lockedUntil time.Time) error {
+	tag, err := s.pool.Exec(ctx, `
+		update users
+		set locked_until = $2,
+		    updated_at = now()
+		where id = $1
+	`, userID, lockedUntil)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return errNotFound
+	}
+	return nil
+}
+
+func (s *Store) ClearUserTemporaryLock(ctx context.Context, userID uuid.UUID) error {
+	tag, err := s.pool.Exec(ctx, `
+		update users
+		set locked_until = null,
+		    updated_at = now()
+		where id = $1
+	`, userID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return errNotFound
+	}
+	return nil
+}
+
+func (s *Store) RecordSecurityEvent(ctx context.Context, event SecurityEvent) error {
+	if event.ID == uuid.Nil {
+		event.ID = uuid.New()
+	}
+	if event.DetectedAt.IsZero() {
+		event.DetectedAt = time.Now().UTC()
+	}
+	if event.Status == "" {
+		event.Status = "open"
+	}
+	_, err := s.pool.Exec(ctx, `
+		insert into security_events (
+			id, user_id, type, severity, status, summary, detected_at, resolved_at, metadata
+		)
+		values (
+			$1, $2, $3, $4, $5, $6, $7, $8,
+			jsonb_build_object('sourceIpAddress', $9::text, 'countryCode', $10::text)
+		)
+	`, event.ID, event.UserID, event.Type, event.Severity, event.Status, event.Summary, event.DetectedAt, event.ResolvedAt, event.SourceIPAddress, event.CountryCode)
 	return err
 }

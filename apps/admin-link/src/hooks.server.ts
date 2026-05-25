@@ -6,9 +6,7 @@ import type { AdminActor } from '$lib/domain/admin-access/types';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const allowMockAdmin = env.ADMIN_LINK_MOCK_AUTH === 'true';
-	if (!dev && allowMockAdmin) {
-		error(500, 'ADMIN_LINK_MOCK_AUTH is development-only');
-	}
+	assertMockAdminAllowed(allowMockAdmin, dev);
 	const requestedRole = allowMockAdmin ? event.url.searchParams.get('as') ?? event.cookies.get('admin_role') ?? null : null;
 
 	event.locals.adminMode = allowMockAdmin ? 'mock' : 'real';
@@ -22,6 +20,12 @@ export const handle: Handle = async ({ event, resolve }) => {
 
 	return resolve(event);
 };
+
+export function assertMockAdminAllowed(allowMockAdmin: boolean, isDev: boolean) {
+	if (!isDev && allowMockAdmin) {
+		error(500, 'ADMIN_LINK_MOCK_AUTH is development-only');
+	}
+}
 
 async function fetchAdminActor(event: Parameters<Handle>[0]['event']): Promise<AdminActor | null> {
 	const baseUrl = env.AUTH_API_BASE_URL ?? 'http://localhost:8080';

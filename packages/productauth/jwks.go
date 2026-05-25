@@ -9,20 +9,24 @@ import (
 	"fmt"
 	"math/big"
 	"net/http"
+	"sync"
 	"time"
 )
 
 type RemoteValidatorConfig struct {
-	JWKSURL   string
-	Issuer    string
-	Audience  string
-	ProductID string
-	Client    *http.Client
+	JWKSURL      string
+	Issuer       string
+	Audience     string
+	ProductID    string
+	Client       *http.Client
+	JWKSCacheTTL time.Duration
 }
 
 type RemoteValidator struct {
-	config RemoteValidatorConfig
-	keys   map[string]*rsa.PublicKey
+	config    RemoteValidatorConfig
+	mu        sync.RWMutex
+	keys      map[string]*rsa.PublicKey
+	expiresAt time.Time
 }
 
 type jwksDocument struct {
@@ -54,13 +58,46 @@ func NewRemoteValidator(ctx context.Context, config RemoteValidatorConfig) (*Rem
 	if config.Client == nil {
 		config.Client = &http.Client{Timeout: 5 * time.Second}
 	}
+	if config.JWKSCacheTTL <= 0 {
+		config.JWKSCacheTTL = 5 * time.Minute
+	}
 
 	keys, err := fetchJWKS(ctx, config.Client, config.JWKSURL)
 	if err != nil {
 		return nil, err
 	}
 
-	return &RemoteValidator{config: config, keys: keys}, nil
+	return &RemoteValidator{config: config, keys: keys, expiresAt: time.Now().Add(config.JWKSCacheTTL)}, nil
+}
+
+func (v *RemoteValidator) refreshJWKS(ctx context.Context) error {
+	keys, err := fetchJWKS(ctx, v.config.Client, v.config.JWKSURL)
+	if err != nil {
+		return err
+	}
+
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.keys = keys
+	v.expiresAt = time.Now().Add(v.config.JWKSCacheTTL)
+	return nil
+}
+
+func (v *RemoteValidator) refreshJWKSIfExpired(ctx context.Context) error {
+	v.mu.RLock()
+	expired := time.Now().After(v.expiresAt)
+	v.mu.RUnlock()
+	if !expired {
+		return nil
+	}
+	return v.refreshJWKS(ctx)
+}
+
+func (v *RemoteValidator) key(kid string) (*rsa.PublicKey, bool) {
+	v.mu.RLock()
+	defer v.mu.RUnlock()
+	key, ok := v.keys[kid]
+	return key, ok
 }
 
 func fetchJWKS(ctx context.Context, client *http.Client, url string) (map[string]*rsa.PublicKey, error) {
@@ -104,8 +141,17 @@ func (key jwk) rsaPublicKey() (*rsa.PublicKey, error) {
 	if key.Kty != "RSA" {
 		return nil, fmt.Errorf("unsupported key type %q", key.Kty)
 	}
+	if key.Alg != "" && key.Alg != "RS256" {
+		return nil, fmt.Errorf("unsupported key alg %q", key.Alg)
+	}
+	if key.Use != "" && key.Use != "sig" {
+		return nil, fmt.Errorf("unsupported key use %q", key.Use)
+	}
 	if key.Kid == "" {
 		return nil, errors.New("kid is required")
+	}
+	if key.N == "" || key.E == "" {
+		return nil, errors.New("modulus and exponent are required")
 	}
 
 	modulusBytes, err := base64.RawURLEncoding.DecodeString(key.N)

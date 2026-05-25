@@ -11,6 +11,23 @@ import type { ManagedUserDetail, UserListItem, UserListQuery, UserStatus } from 
 
 type HeaderSource = () => Record<string, string> | Promise<Record<string, string>>;
 
+type AuthServiceErrorBody = {
+	error?: string;
+	code?: string;
+	message?: string;
+};
+
+export class AdminApiError extends Error {
+	constructor(
+		readonly status: number,
+		readonly code: string,
+		message: string
+	) {
+		super(message);
+		this.name = 'AdminApiError';
+	}
+}
+
 export class AuthServiceAdminApiRepository implements AdminRepository {
 	constructor(
 		private readonly baseUrl: string,
@@ -23,7 +40,7 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 		const response = await this.fetchImpl(`${this.baseUrl}${path}`, { headers: this.requestHeaders });
 
 		if (!response.ok) {
-			throw new Error(`Admin API request failed: ${response.status}`);
+			throw await adminApiError(response);
 		}
 
 		return response.json() as Promise<T>;
@@ -124,7 +141,7 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 		});
 
 		if (!response.ok) {
-			throw new Error(`Admin API request failed: ${response.status}`);
+			throw await adminApiError(response);
 		}
 
 		return response.json() as Promise<SmtpSettings>;
@@ -141,7 +158,7 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 		});
 
 		if (!response.ok) {
-			throw new Error(`Admin API request failed: ${response.status}`);
+			throw await adminApiError(response);
 		}
 	}
 
@@ -156,7 +173,7 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 		});
 
 		if (!response.ok) {
-			throw new Error(`Admin API request failed: ${response.status}`);
+			throw await adminApiError(response);
 		}
 	}
 
@@ -171,7 +188,14 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 		});
 
 		if (!response.ok) {
-			throw new Error(`Admin API request failed: ${response.status}`);
+			throw await adminApiError(response);
 		}
 	}
+}
+
+async function adminApiError(response: Response) {
+	const body = (await response.json().catch(() => ({}))) as AuthServiceErrorBody;
+	const code = body.code ?? `http_${response.status}`;
+	const message = body.error ?? body.message ?? `Admin API request failed: ${response.status}`;
+	return new AdminApiError(response.status, code, message);
 }

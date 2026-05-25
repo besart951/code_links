@@ -103,7 +103,7 @@ func (s *Server) handleLogin(w http.ResponseWriter, r *http.Request) {
 	session, err := s.auth.Login(r.Context(), auth.LoginInput{
 		Email:    request.Email,
 		Password: request.Password,
-		Attempt:  loginAttemptMetadata(r),
+		Attempt:  s.loginAttemptMetadata(r),
 	})
 	if err != nil {
 		writeAuthError(w, err)
@@ -120,6 +120,7 @@ func (s *Server) handleRefresh(w http.ResponseWriter, r *http.Request) {
 	}
 	session, err := s.auth.Refresh(r.Context(), cookie.Value)
 	if err != nil {
+		http.SetCookie(w, s.refreshCookie("", time.Unix(0, 0)))
 		writeAuthError(w, err)
 		return
 	}
@@ -194,10 +195,10 @@ func bearerToken(r *http.Request) string {
 	return rawToken
 }
 
-func loginAttemptMetadata(r *http.Request) auth.LoginAttemptMetadata {
+func (s *Server) loginAttemptMetadata(r *http.Request) auth.LoginAttemptMetadata {
 	browser, operatingSystem := requestmeta.DeviceFromUserAgent(r.UserAgent())
 	return auth.LoginAttemptMetadata{
-		IPAddress:       requestmeta.ClientIPAddress(r),
+		IPAddress:       s.meta.ClientIPAddress(r),
 		CountryCode:     requestmeta.CountryFromRequest(r),
 		City:            requestmeta.CityFromRequest(r),
 		UserAgent:       r.UserAgent(),
@@ -210,7 +211,7 @@ func loginAttemptMetadata(r *http.Request) auth.LoginAttemptMetadata {
 func writeAuthError(w http.ResponseWriter, err error) {
 	var serviceError *auth.Error
 	if !errors.As(err, &serviceError) {
-		writeError(w, http.StatusInternalServerError, "internal server error")
+		writeErrorCode(w, http.StatusInternalServerError, string(auth.KindInternal), "internal server error")
 		return
 	}
 
@@ -226,6 +227,10 @@ func writeAuthError(w http.ResponseWriter, err error) {
 		status = http.StatusConflict
 	case auth.KindBadGateway:
 		status = http.StatusBadGateway
+	case auth.KindRateLimited:
+		status = http.StatusTooManyRequests
+	case auth.KindRefreshReuse:
+		status = http.StatusUnauthorized
 	}
-	writeError(w, status, serviceError.Message)
+	writeErrorCode(w, status, string(serviceError.Kind), serviceError.Message)
 }

@@ -21,13 +21,18 @@ type Store interface {
 	GrantLicense(ctx context.Context, userID uuid.UUID, productID string) ([]string, error)
 	CreateRefreshSession(ctx context.Context, tokenHash string, userID uuid.UUID, expiresAt time.Time) error
 	FindRefreshSession(ctx context.Context, tokenHash string) (uuid.UUID, error)
-	ConsumeRefreshSession(ctx context.Context, tokenHash string) (uuid.UUID, error)
+	ConsumeRefreshSession(ctx context.Context, tokenHash string) (domain.RefreshSessionConsumeResult, error)
+	RevokeRefreshSessionsForUser(ctx context.Context, userID uuid.UUID) error
 	DeleteRefreshSession(ctx context.Context, tokenHash string) error
 	CreateEmailVerificationToken(ctx context.Context, userID uuid.UUID, tokenHash string, expiresAt time.Time) error
 	VerifyEmailToken(ctx context.Context, tokenHash string, now time.Time) (domain.User, error)
 	CreatePasswordResetToken(ctx context.Context, userID uuid.UUID, tokenHash string, expiresAt time.Time) error
 	ResetPasswordByToken(ctx context.Context, tokenHash string, passwordHash string, now time.Time) (domain.User, error)
+	CountRecentFailedLoginAttempts(ctx context.Context, email string, ipHash string, since time.Time) (domain.LoginFailureCounts, error)
+	SetUserTemporaryLock(ctx context.Context, userID uuid.UUID, lockedUntil time.Time) error
+	ClearUserTemporaryLock(ctx context.Context, userID uuid.UUID) error
 	RecordLoginAttempt(ctx context.Context, attempt domain.LoginAttempt) error
+	RecordSecurityEvent(ctx context.Context, event domain.SecurityEvent) error
 }
 
 type RoleStore interface {
@@ -46,6 +51,7 @@ type Config struct {
 	Environment          string
 	PublicFrontendURL    string
 	RefreshTokenLifetime time.Duration
+	LoginProtection      LoginProtection
 }
 
 type Service struct {
@@ -72,6 +78,8 @@ const (
 	KindInvalidToken  Kind = "invalid_token"
 	KindMissingToken  Kind = "missing_token"
 	KindEmailConflict Kind = "email_conflict"
+	KindRateLimited   Kind = "too_many_attempts"
+	KindRefreshReuse  Kind = "refresh_token_reuse"
 )
 
 type Error struct {
@@ -243,8 +251,25 @@ type Session struct {
 }
 
 func (s *Service) Login(ctx context.Context, input LoginInput) (Session, error) {
+	now := time.Now().UTC()
 	email := domain.NormalizeEmail(input.Email)
 	user, licenses, err := s.store.FindUserByEmail(ctx, email)
+	userFound := err == nil
+	ipHash := hashIPAddress(input.Attempt.IPAddress)
+	protection := s.config.LoginProtection.normalized()
+	counts, countErr := s.store.CountRecentFailedLoginAttempts(ctx, email, ipHash, now.Add(-protection.Window))
+	if countErr != nil {
+		return Session{}, serviceError(KindInternal, "could not check login protection")
+	}
+	if protection.rateLimited(counts) {
+		if userFound {
+			if err := s.store.SetUserTemporaryLock(ctx, user.ID, now.Add(protection.Lockout)); err != nil {
+				return Session{}, serviceError(KindInternal, "could not set temporary lock")
+			}
+		}
+		s.recordRateLimitedLogin(ctx, userIDPtr(userFound, user.ID), email, input.Attempt, now)
+		return Session{}, serviceError(KindRateLimited, "too many login attempts")
+	}
 	if errors.Is(err, domain.ErrNotFound) {
 		s.recordLoginAttempt(ctx, nil, email, false, domain.LoginFailureUnknownEmail, input.Attempt)
 		return Session{}, serviceError(KindUnauthorized, "invalid email or password")
@@ -253,6 +278,10 @@ func (s *Service) Login(ctx context.Context, input LoginInput) (Session, error) 
 		return Session{}, serviceError(KindInternal, "could not load user")
 	}
 
+	if user.LockedUntil != nil && now.Before(*user.LockedUntil) {
+		s.recordRateLimitedLogin(ctx, &user.ID, email, input.Attempt, now)
+		return Session{}, serviceError(KindRateLimited, "too many login attempts")
+	}
 	if user.Status == domain.UserStatusLocked || user.Status == domain.UserStatusDisabled {
 		s.recordLoginAttempt(ctx, &user.ID, email, false, domain.LoginFailureAccountLocked, input.Attempt)
 		return Session{}, serviceError(KindForbidden, "account is locked")
@@ -266,6 +295,12 @@ func (s *Service) Login(ctx context.Context, input LoginInput) (Session, error) 
 		return Session{}, serviceError(KindUnauthorized, "invalid email or password")
 	}
 
+	if user.LockedUntil != nil {
+		if err := s.store.ClearUserTemporaryLock(ctx, user.ID); err != nil {
+			return Session{}, serviceError(KindInternal, "could not clear temporary lock")
+		}
+		user.LockedUntil = nil
+	}
 	s.recordLoginAttempt(ctx, &user.ID, email, true, "", input.Attempt)
 	return s.issueSession(ctx, user, licenses, true)
 }
@@ -275,12 +310,25 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (Session, er
 		return Session{}, serviceError(KindUnauthorized, "missing refresh token")
 	}
 	tokenHash := secret.HashRefreshToken(refreshToken)
-	userID, err := s.store.ConsumeRefreshSession(ctx, tokenHash)
+	result, err := s.store.ConsumeRefreshSession(ctx, tokenHash)
 	if err != nil {
 		return Session{}, serviceError(KindUnauthorized, "invalid refresh token")
 	}
+	if result.Reused {
+		_ = s.store.RevokeRefreshSessionsForUser(ctx, result.UserID)
+		_ = s.store.RecordSecurityEvent(ctx, domain.SecurityEvent{
+			ID:         uuid.New(),
+			UserID:     &result.UserID,
+			Type:       domain.SecurityEventRefreshTokenReuse,
+			Severity:   "critical",
+			Status:     "open",
+			Summary:    "Refresh token reuse detected; active sessions revoked",
+			DetectedAt: time.Now().UTC(),
+		})
+		return Session{}, serviceError(KindRefreshReuse, "invalid refresh token")
+	}
 
-	user, licenses, err := s.store.FindUserByID(ctx, userID)
+	user, licenses, err := s.store.FindUserByID(ctx, result.UserID)
 	if err != nil {
 		return Session{}, serviceError(KindUnauthorized, "invalid refresh token")
 	}
@@ -348,14 +396,13 @@ func (s *Service) recordLoginAttempt(ctx context.Context, userID *uuid.UUID, ema
 	if failureReason != "" {
 		reason = &failureReason
 	}
-	ipHash := sha256.Sum256([]byte(metadata.IPAddress))
 	_ = s.store.RecordLoginAttempt(ctx, domain.LoginAttempt{
 		ID:              uuid.New(),
 		UserID:          userID,
 		EmailAttempted:  email,
 		OccurredAt:      time.Now().UTC(),
 		IPAddress:       metadata.IPAddress,
-		IPHash:          base64.RawURLEncoding.EncodeToString(ipHash[:]),
+		IPHash:          hashIPAddress(metadata.IPAddress),
 		CountryCode:     metadata.CountryCode,
 		City:            metadata.City,
 		UserAgent:       metadata.UserAgent,
@@ -369,11 +416,40 @@ func (s *Service) recordLoginAttempt(ctx context.Context, userID *uuid.UUID, ema
 	})
 }
 
+func (s *Service) recordRateLimitedLogin(ctx context.Context, userID *uuid.UUID, email string, metadata LoginAttemptMetadata, now time.Time) {
+	s.recordLoginAttempt(ctx, userID, email, false, domain.LoginFailureTooManyAttempts, metadata)
+	_ = s.store.RecordSecurityEvent(ctx, domain.SecurityEvent{
+		ID:              uuid.New(),
+		UserID:          userID,
+		Type:            domain.SecurityEventLoginRateLimited,
+		Severity:        "high",
+		Status:          "open",
+		Summary:         "Login rate limit exceeded",
+		DetectedAt:      now,
+		SourceIPAddress: metadata.IPAddress,
+		CountryCode:     metadata.CountryCode,
+	})
+}
+
+func hashIPAddress(ipAddress string) string {
+	ipHash := sha256.Sum256([]byte(ipAddress))
+	return base64.RawURLEncoding.EncodeToString(ipHash[:])
+}
+
+func userIDPtr(ok bool, userID uuid.UUID) *uuid.UUID {
+	if !ok {
+		return nil
+	}
+	return &userID
+}
+
 func riskScore(success bool, failureReason domain.LoginFailureReason) int {
 	if success {
 		return 8
 	}
 	switch failureReason {
+	case domain.LoginFailureTooManyAttempts:
+		return 90
 	case domain.LoginFailureAccountLocked:
 		return 85
 	case domain.LoginFailureUnknownEmail:

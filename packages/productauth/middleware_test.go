@@ -9,6 +9,7 @@ import (
 	"math/big"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -110,6 +111,95 @@ func TestMiddlewareAddsCurrentUserToContext(t *testing.T) {
 
 	if recorder.Code != http.StatusNoContent {
 		t.Fatalf("expected 204, got %d", recorder.Code)
+	}
+}
+
+func TestRemoteValidatorRefreshesJWKSOnUnknownKid(t *testing.T) {
+	oldKey := newTestKey(t)
+	newKey := newTestKey(t)
+	var requests int32
+	jwksServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if atomic.AddInt32(&requests, 1) == 1 {
+			_ = json.NewEncoder(w).Encode(jwksDocument{Keys: []jwk{testJWK("old-key", &oldKey.PublicKey)}})
+			return
+		}
+		_ = json.NewEncoder(w).Encode(jwksDocument{Keys: []jwk{testJWK("new-key", &newKey.PublicKey)}})
+	}))
+	defer jwksServer.Close()
+
+	validator, err := NewRemoteValidator(context.Background(), RemoteValidatorConfig{
+		JWKSURL:   jwksServer.URL,
+		Issuer:    "http://auth.codelinks.localhost",
+		Audience:  "codelinks-products",
+		ProductID: "infra-link",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := validator.ValidateToken(signToken(t, newKey, "new-key", []string{"infra-link"})); err != nil {
+		t.Fatal(err)
+	}
+	if atomic.LoadInt32(&requests) != 2 {
+		t.Fatalf("expected unknown kid refresh, got %d requests", requests)
+	}
+}
+
+func TestRemoteValidatorRefreshesJWKSAfterTTL(t *testing.T) {
+	oldKey := newTestKey(t)
+	newKey := newTestKey(t)
+	var requests int32
+	jwksServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		if atomic.AddInt32(&requests, 1) == 1 {
+			_ = json.NewEncoder(w).Encode(jwksDocument{Keys: []jwk{testJWK("old-key", &oldKey.PublicKey)}})
+			return
+		}
+		_ = json.NewEncoder(w).Encode(jwksDocument{Keys: []jwk{testJWK("new-key", &newKey.PublicKey)}})
+	}))
+	defer jwksServer.Close()
+
+	validator, err := NewRemoteValidator(context.Background(), RemoteValidatorConfig{
+		JWKSURL:      jwksServer.URL,
+		Issuer:       "http://auth.codelinks.localhost",
+		Audience:     "codelinks-products",
+		ProductID:    "infra-link",
+		JWKSCacheTTL: time.Nanosecond,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(time.Millisecond)
+
+	if _, err := validator.ValidateToken(signToken(t, newKey, "new-key", []string{"infra-link"})); err != nil {
+		t.Fatal(err)
+	}
+	if atomic.LoadInt32(&requests) < 2 {
+		t.Fatalf("expected TTL refresh, got %d requests", requests)
+	}
+}
+
+func TestRemoteValidatorRejectsInvalidJWKMetadata(t *testing.T) {
+	privateKey := newTestKey(t)
+	badAlg := testJWK("test-key", &privateKey.PublicKey)
+	badAlg.Alg = "HS256"
+	badUse := testJWK("test-key", &privateKey.PublicKey)
+	badUse.Use = "enc"
+	for name, key := range map[string]jwk{"alg": badAlg, "use": badUse} {
+		t.Run(name, func(t *testing.T) {
+			jwksServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+				_ = json.NewEncoder(w).Encode(jwksDocument{Keys: []jwk{key}})
+			}))
+			defer jwksServer.Close()
+
+			if _, err := NewRemoteValidator(context.Background(), RemoteValidatorConfig{
+				JWKSURL:   jwksServer.URL,
+				Issuer:    "http://auth.codelinks.localhost",
+				Audience:  "codelinks-products",
+				ProductID: "infra-link",
+			}); err == nil {
+				t.Fatal("expected invalid JWK metadata to fail")
+			}
+		})
 	}
 }
 

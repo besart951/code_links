@@ -14,6 +14,7 @@ import (
 	authsvc "github.com/besart951/code-links/apps/auth-service/backend/internal/auth"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/domain"
 	appmail "github.com/besart951/code-links/apps/auth-service/backend/internal/mail"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/requestmeta"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/secret"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/memory"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/token"
@@ -103,6 +104,109 @@ func TestSignupRequiresEmailVerificationBeforeLogin(t *testing.T) {
 	}
 	if attempts.Total < 2 {
 		t.Fatalf("expected login attempts to be recorded, got %d", attempts.Total)
+	}
+}
+
+func TestLoginRateLimitReturnsStructured429(t *testing.T) {
+	server := newTestServer(t)
+
+	for attempt := 0; attempt < 5; attempt++ {
+		recorder := httptest.NewRecorder()
+		server.routes().ServeHTTP(
+			recorder,
+			httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewBufferString(`{"email":"demo@codelinks.dev","password":"wrong-password"}`)),
+		)
+		if recorder.Code != http.StatusUnauthorized {
+			t.Fatalf("expected unauthorized attempt %d, got %d", attempt+1, recorder.Code)
+		}
+	}
+
+	recorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(
+		recorder,
+		httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewBufferString(`{"email":"demo@codelinks.dev","password":"wrong-password"}`)),
+	)
+	if recorder.Code != http.StatusTooManyRequests {
+		t.Fatalf("expected 429, got %d: %s", recorder.Code, recorder.Body.String())
+	}
+	var body map[string]string
+	if err := json.NewDecoder(recorder.Body).Decode(&body); err != nil {
+		t.Fatal(err)
+	}
+	if body["code"] != "too_many_attempts" {
+		t.Fatalf("expected too_many_attempts code, got %#v", body)
+	}
+}
+
+func TestRefreshTokenReuseClearsCookieAndRevokesSessions(t *testing.T) {
+	server := newTestServer(t)
+	_, cookies := loginAndDecodeWithCookies(t, server, "demo@codelinks.dev", "password")
+	oldCookie := refreshCookieFrom(t, cookies)
+
+	firstRefresh := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", nil)
+	firstRefresh.AddCookie(oldCookie)
+	firstRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(firstRecorder, firstRefresh)
+	if firstRecorder.Code != http.StatusOK {
+		t.Fatalf("expected first refresh 200, got %d: %s", firstRecorder.Code, firstRecorder.Body.String())
+	}
+	newCookie := refreshCookieFrom(t, firstRecorder.Result().Cookies())
+
+	reuse := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", nil)
+	reuse.AddCookie(oldCookie)
+	reuseRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(reuseRecorder, reuse)
+	if reuseRecorder.Code != http.StatusUnauthorized {
+		t.Fatalf("expected refresh reuse 401, got %d: %s", reuseRecorder.Code, reuseRecorder.Body.String())
+	}
+	clearCookie := refreshCookieFrom(t, reuseRecorder.Result().Cookies())
+	if clearCookie.MaxAge >= 0 {
+		t.Fatalf("expected cleared refresh cookie, got %#v", clearCookie)
+	}
+
+	events, err := server.store.ListSecurityEvents(context.Background(), 100)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !hasSecurityEvent(events, domain.SecurityEventRefreshTokenReuse) {
+		t.Fatalf("expected refresh reuse security event, got %#v", events)
+	}
+
+	revoked := httptest.NewRequest(http.MethodPost, "/api/auth/refresh", nil)
+	revoked.AddCookie(newCookie)
+	revokedRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(revokedRecorder, revoked)
+	if revokedRecorder.Code != http.StatusUnauthorized {
+		t.Fatalf("expected revoked refresh token 401, got %d: %s", revokedRecorder.Code, revokedRecorder.Body.String())
+	}
+}
+
+func TestProxyHeadersRequireTrustedRemote(t *testing.T) {
+	server := newTestServer(t)
+
+	untrusted := httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewBufferString(`{"email":"proxy-untrusted@example.com","password":"wrong"}`))
+	untrusted.RemoteAddr = "198.51.100.10:1234"
+	untrusted.Header.Set("X-Forwarded-For", "203.0.113.10")
+	server.routes().ServeHTTP(httptest.NewRecorder(), untrusted)
+
+	attempt := latestAttemptForEmail(t, server, "proxy-untrusted@example.com")
+	if attempt.IPAddress != "198.51.100.10" {
+		t.Fatalf("expected untrusted request to use RemoteAddr, got %q", attempt.IPAddress)
+	}
+
+	resolver, err := requestmeta.NewResolver([]string{"198.51.100.0/24"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	server.meta = resolver
+	trusted := httptest.NewRequest(http.MethodPost, "/api/auth/login", bytes.NewBufferString(`{"email":"proxy-trusted@example.com","password":"wrong"}`))
+	trusted.RemoteAddr = "198.51.100.10:1234"
+	trusted.Header.Set("X-Forwarded-For", "203.0.113.11")
+	server.routes().ServeHTTP(httptest.NewRecorder(), trusted)
+
+	attempt = latestAttemptForEmail(t, server, "proxy-trusted@example.com")
+	if attempt.IPAddress != "203.0.113.11" {
+		t.Fatalf("expected trusted proxy header, got %q", attempt.IPAddress)
 	}
 }
 
@@ -527,6 +631,42 @@ func loginAndDecodeWithCookies(t *testing.T, server *testServer, email string, p
 	}
 
 	return session, recorder.Result().Cookies()
+}
+
+func refreshCookieFrom(t *testing.T, cookies []*http.Cookie) *http.Cookie {
+	t.Helper()
+	for _, cookie := range cookies {
+		if cookie.Name == "refresh_token" {
+			return cookie
+		}
+	}
+	t.Fatal("expected refresh cookie")
+	return nil
+}
+
+func hasSecurityEvent(events []domain.SecurityEvent, eventType string) bool {
+	for _, event := range events {
+		if event.Type == eventType {
+			return true
+		}
+	}
+	return false
+}
+
+func latestAttemptForEmail(t *testing.T, server *testServer, email string) domain.LoginAttempt {
+	t.Helper()
+	attempts, err := server.store.ListLoginAttempts(context.Background(), domain.LoginAttemptListQuery{
+		Query:    email,
+		Page:     1,
+		PageSize: 1,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(attempts.Items) != 1 {
+		t.Fatalf("expected login attempt for %s, got %#v", email, attempts)
+	}
+	return attempts.Items[0]
 }
 
 func contains(items []string, value string) bool {

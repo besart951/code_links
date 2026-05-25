@@ -50,4 +50,22 @@ describe('AuthServiceAdminApiRepository', () => {
 			body: JSON.stringify({ status: 'locked' })
 		});
 	});
+
+	it('parses structured Auth Service errors', async () => {
+		const fetchImpl = vi.fn(
+			async () => Response.json({ error: 'Admin role required', code: 'forbidden' }, { status: 403 })
+		);
+		const repository = new AuthServiceAdminApiRepository('http://auth-service:8080', fetchImpl, {
+			accept: 'application/json',
+			cookie: 'refresh_token=abc'
+		});
+
+		await expect(
+			repository.listUsers({
+				page: 1,
+				pageSize: 25,
+				sort: { field: 'createdAt', direction: 'desc' }
+			})
+		).rejects.toMatchObject({ status: 403, code: 'forbidden', message: 'Admin role required' });
+	});
 });

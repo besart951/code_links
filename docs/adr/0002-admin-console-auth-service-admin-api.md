@@ -16,6 +16,8 @@ The SvelteKit Admin Console must stay SSR-safe. Browser code must not receive da
 
 The Auth Service remains the system of record for admin data. The Admin Console depends on repository interfaces, with a server-only mock repository for local UI work and an `AuthServiceAdminApiRepository` seam for the real Go Admin API.
 
+ADR 0005 extends this seam with Structured Auth Errors: Auth Service Admin API errors carry both `error` and `code`, and Admin-Link preserves those values in server loads and actions.
+
 Admin access is controlled by Admin Roles and canonical `admin.*` Permissions, not by Product Licenses. The UI can hide unavailable actions, but permission checks must also run in use cases and in the Auth Service Admin API.
 
 The Auth Service frontend owns public auth screens (`/login`, `/signup`, `/forgot-password`, `/reset-password`) and proxies form submissions to the Go API through SvelteKit server actions. `admin-link` stays an SSR-protected Admin Console and resolves the current Admin Actor by calling `GET /api/admin/me` with the httpOnly refresh cookie.

@@ -13,6 +13,7 @@ import (
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/httpapi"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/mail"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/processlog"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/requestmeta"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/memory"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/postgres"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/token"
@@ -62,6 +63,10 @@ func Run(ctx context.Context) error {
 		PublicFrontendURL:    cfg.PublicFrontendURL,
 		RefreshTokenLifetime: cfg.RefreshTokenLifetime,
 	}, store, store, store, signer)
+	requestMeta, err := requestmeta.NewResolver(cfg.TrustedProxyCIDRs)
+	if err != nil {
+		return err
+	}
 	adminService := admin.NewService(admin.Config{
 		SMTPSecretKey: cfg.SMTPSecretKey,
 	}, store, store, store, store, processlog.Reader{Path: cfg.RuntimeLogFile}, store, signer, mail.SmtpSender{})
@@ -72,6 +77,7 @@ func Run(ctx context.Context) error {
 		CookieDomain:       cfg.CookieDomain,
 		CookieSecure:       cfg.CookieSecure,
 		PublicFrontendURL:  cfg.PublicFrontendURL,
+		RequestMeta:        requestMeta,
 	}, authService, adminService, userInfoService, signer)
 
 	httpServer := &http.Server{

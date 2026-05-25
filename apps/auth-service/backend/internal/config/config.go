@@ -3,7 +3,10 @@ package config
 import (
 	"crypto/sha256"
 	"encoding/base64"
+	"fmt"
 	"log"
+	"net/netip"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -20,6 +23,7 @@ type Config struct {
 	PublicAuthBaseURL    string
 	PublicFrontendURL    string
 	AllowedOrigins       []string
+	TrustedProxyCIDRs    []string
 	EnableMockPurchase   bool
 	RuntimeLogFile       string
 	AccessTokenLifetime  time.Duration
@@ -39,7 +43,7 @@ func Load() Config {
 		log.Fatal("fatal: JWT_PRIVATE_KEY_PEM or JWT_PRIVATE_KEY_FILE must be set in production")
 	}
 
-	return Config{
+	cfg := Config{
 		Port:                 env("PORT", "8080"),
 		DatabaseURL:          os.Getenv("DATABASE_URL"),
 		Environment:          environment,
@@ -50,6 +54,7 @@ func Load() Config {
 		PublicAuthBaseURL:    env("PUBLIC_AUTH_BASE_URL", "http://auth.codelinks.localhost"),
 		PublicFrontendURL:    env("PUBLIC_AUTH_FRONTEND_URL", "http://auth.codelinks.localhost"),
 		AllowedOrigins:       splitCSV(env("ALLOWED_ORIGINS", "http://code-links.codelinks.localhost,http://admin-link.codelinks.localhost,http://auth.codelinks.localhost,http://localhost:5173,http://localhost:5174,http://localhost:5175")),
+		TrustedProxyCIDRs:    splitCSV(os.Getenv("TRUSTED_PROXY_CIDRS")),
 		EnableMockPurchase:   os.Getenv("ENABLE_MOCK_PURCHASE") == "true",
 		RuntimeLogFile:       env("AUTH_SERVICE_LOG_FILE", "logs/auth-service.log"),
 		AccessTokenLifetime:  15 * time.Minute,
@@ -59,6 +64,11 @@ func Load() Config {
 		JWTPrivateKeyFile:    jwtPrivateKeyFile,
 		SMTPSecretKey:        smtpSecretKey,
 	}
+	if err := ValidateProductionConfig(cfg); err != nil {
+		log.Fatal("fatal: " + err.Error())
+	}
+
+	return cfg
 }
 
 func smtpSecretKey(environment string) []byte {
@@ -100,4 +110,74 @@ func splitCSV(value string) []string {
 	}
 
 	return items
+}
+
+func ValidateProductionConfig(cfg Config) error {
+	if cfg.Environment != "production" {
+		return nil
+	}
+
+	problems := []string{}
+	if cfg.JWTPrivateKeyPEM == "" && cfg.JWTPrivateKeyFile == "" {
+		problems = append(problems, "JWT_PRIVATE_KEY_PEM or JWT_PRIVATE_KEY_FILE must be set")
+	}
+	if len(cfg.SMTPSecretKey) == 0 {
+		problems = append(problems, "SMTP_SECRET_KEY must be set")
+	}
+	if !cfg.CookieSecure {
+		problems = append(problems, "COOKIE_SECURE must resolve true")
+	}
+	if containsLocalhost(cfg.CookieDomain) {
+		problems = append(problems, "COOKIE_DOMAIN must not contain localhost")
+	}
+	for name, value := range map[string]string{
+		"PUBLIC_AUTH_FRONTEND_URL": cfg.PublicFrontendURL,
+		"PUBLIC_AUTH_BASE_URL":     cfg.PublicAuthBaseURL,
+	} {
+		if containsLocalhost(value) {
+			problems = append(problems, name+" must not contain localhost")
+		}
+		if value != "" && !isHTTPSURL(value) {
+			problems = append(problems, name+" must be HTTPS")
+		}
+	}
+	for _, origin := range cfg.AllowedOrigins {
+		if containsLocalhost(origin) {
+			problems = append(problems, "ALLOWED_ORIGINS must not contain localhost")
+		}
+		if !isHTTPSURL(origin) {
+			problems = append(problems, "ALLOWED_ORIGINS must be HTTPS")
+		}
+	}
+	if cfg.EnableMockPurchase {
+		problems = append(problems, "ENABLE_MOCK_PURCHASE must be false")
+	}
+	for _, cidr := range cfg.TrustedProxyCIDRs {
+		if trustedProxyCIDRIsWildcard(cidr) {
+			problems = append(problems, "TRUSTED_PROXY_CIDRS must not contain wildcard CIDR")
+		}
+	}
+
+	if len(problems) > 0 {
+		return fmt.Errorf("invalid production config: %s", strings.Join(problems, "; "))
+	}
+	return nil
+}
+
+func containsLocalhost(value string) bool {
+	lower := strings.ToLower(value)
+	return strings.Contains(lower, "localhost") || strings.Contains(lower, "codelinks.localhost")
+}
+
+func isHTTPSURL(value string) bool {
+	parsed, err := url.Parse(value)
+	return err == nil && parsed.Scheme == "https" && parsed.Host != ""
+}
+
+func trustedProxyCIDRIsWildcard(value string) bool {
+	prefix, err := netip.ParsePrefix(value)
+	if err != nil {
+		return false
+	}
+	return prefix.Bits() == 0
 }

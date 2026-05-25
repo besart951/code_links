@@ -7,7 +7,6 @@ import (
 
 	adminsvc "github.com/besart951/code-links/apps/auth-service/backend/internal/admin"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/domain"
-	"github.com/besart951/code-links/apps/auth-service/backend/internal/requestmeta"
 	"github.com/google/uuid"
 )
 
@@ -104,7 +103,7 @@ func (s *Server) handleAdminUpdateUser(w http.ResponseWriter, r *http.Request) {
 	if !decodeJSON(w, r, &request) {
 		return
 	}
-	user, err := s.admin.SetUserStatus(r.Context(), actor, userID, request.Status, adminMeta(r))
+	user, err := s.admin.SetUserStatus(r.Context(), actor, userID, request.Status, s.adminMeta(r))
 	if err != nil {
 		writeAdminError(w, err)
 		return
@@ -121,7 +120,7 @@ func (s *Server) handleAdminLockUser(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	user, err := s.admin.LockUser(r.Context(), actor, userID, adminMeta(r))
+	user, err := s.admin.LockUser(r.Context(), actor, userID, s.adminMeta(r))
 	if err != nil {
 		writeAdminError(w, err)
 		return
@@ -138,7 +137,7 @@ func (s *Server) handleAdminUnlockUser(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		return
 	}
-	user, err := s.admin.UnlockUser(r.Context(), actor, userID, adminMeta(r))
+	user, err := s.admin.UnlockUser(r.Context(), actor, userID, s.adminMeta(r))
 	if err != nil {
 		writeAdminError(w, err)
 		return
@@ -159,7 +158,7 @@ func (s *Server) handleAdminUpdateUserRole(w http.ResponseWriter, r *http.Reques
 	if !decodeJSON(w, r, &request) {
 		return
 	}
-	user, err := s.admin.SetUserRole(r.Context(), actor, userID, request.Role, adminMeta(r))
+	user, err := s.admin.SetUserRole(r.Context(), actor, userID, request.Role, s.adminMeta(r))
 	if err != nil {
 		writeAdminError(w, err)
 		return
@@ -287,7 +286,7 @@ func (s *Server) handleAdminUpdateSMTPSettings(w http.ResponseWriter, r *http.Re
 		FromName:     request.FromName,
 		ReplyToEmail: request.ReplyToEmail,
 		Active:       request.Active,
-	}, adminMeta(r))
+	}, s.adminMeta(r))
 	if err != nil {
 		writeAdminError(w, err)
 		return
@@ -304,7 +303,7 @@ func (s *Server) handleAdminSendTestEmail(w http.ResponseWriter, r *http.Request
 	if !decodeJSON(w, r, &request) {
 		return
 	}
-	if err := s.admin.SendTestEmail(r.Context(), actor, request.Recipient, adminMeta(r)); err != nil {
+	if err := s.admin.SendTestEmail(r.Context(), actor, request.Recipient, s.adminMeta(r)); err != nil {
 		writeAdminError(w, err)
 		return
 	}
@@ -337,14 +336,14 @@ func refreshCookieValue(r *http.Request) string {
 	return cookie.Value
 }
 
-func adminMeta(r *http.Request) adminsvc.RequestMeta {
-	return adminsvc.RequestMeta{IPAddress: requestmeta.ClientIPAddress(r)}
+func (s *Server) adminMeta(r *http.Request) adminsvc.RequestMeta {
+	return adminsvc.RequestMeta{IPAddress: s.meta.ClientIPAddress(r)}
 }
 
 func writeAdminError(w http.ResponseWriter, err error) {
 	var serviceError *adminsvc.Error
 	if !errors.As(err, &serviceError) {
-		writeError(w, http.StatusInternalServerError, "internal server error")
+		writeErrorCode(w, http.StatusInternalServerError, string(adminsvc.KindInternal), "internal server error")
 		return
 	}
 
@@ -361,5 +360,5 @@ func writeAdminError(w http.ResponseWriter, err error) {
 	case adminsvc.KindBadGateway:
 		status = http.StatusBadGateway
 	}
-	writeError(w, status, serviceError.Message)
+	writeErrorCode(w, status, string(serviceError.Kind), serviceError.Message)
 }

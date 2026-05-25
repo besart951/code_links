@@ -12,6 +12,8 @@ CodeLinks has multiple product applications that need a shared login and license
 
 Use a central Auth Service for login, refresh sessions, license grants, and RS256 Access Token issuance. Product backends fetch the Auth Service JWKS, cache the public key in memory, validate incoming Bearer tokens locally, and check their own product ID in the token `licenses` claim. Refresh sessions are opaque, httpOnly cookie-backed sessions and are atomically consumed during refresh rotation.
 
+ADR 0005 extends this decision: product validators refresh JWKS on unknown `kid` and cache TTL expiry, and consumed Refresh Sessions are retained as reuse-detection markers instead of being deleted immediately.
+
 ## Consequences
 
 This keeps product request latency low and prevents product services from depending on the auth database. Access Tokens cannot be revoked immediately once issued, so they must stay short-lived and be refreshed through httpOnly Refresh Sessions.

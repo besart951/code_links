@@ -25,6 +25,7 @@ type scanner interface {
 func scanUserRow(row scanner) (User, error) {
 	var user User
 	var emailVerifiedAt sql.NullTime
+	var lockedUntil sql.NullTime
 	var lastLoginAt sql.NullTime
 	if err := row.Scan(
 		&user.ID,
@@ -35,6 +36,7 @@ func scanUserRow(row scanner) (User, error) {
 		&emailVerifiedAt,
 		&user.CreatedAt,
 		&user.UpdatedAt,
+		&lockedUntil,
 		&lastLoginAt,
 		&user.LastLoginIP,
 		&user.LastLoginCountryCode,
@@ -43,6 +45,9 @@ func scanUserRow(row scanner) (User, error) {
 	}
 	if emailVerifiedAt.Valid {
 		user.EmailVerifiedAt = &emailVerifiedAt.Time
+	}
+	if lockedUntil.Valid {
+		user.LockedUntil = &lockedUntil.Time
 	}
 	if lastLoginAt.Valid {
 		user.LastLoginAt = &lastLoginAt.Time

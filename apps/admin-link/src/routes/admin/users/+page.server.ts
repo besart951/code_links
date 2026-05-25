@@ -2,6 +2,8 @@ import { fail } from '@sveltejs/kit';
 import { canSeeRawIpAddress } from '$lib/domain/admin-access/permissions';
 import {
 	formString,
+	adminActionFailure,
+	adminLoad,
 	parseRole,
 	parseUserListQuery,
 	parseUserStatus
@@ -10,16 +12,18 @@ import { createAdminContainer } from '$lib/server/admin-container';
 import { requireAdmin } from '$lib/server/auth';
 
 export async function load(event) {
-	const admin = requireAdmin(event.locals);
-	const adminContainer = createAdminContainer(event);
-	const query = parseUserListQuery(event.url);
-	const users = await adminContainer.listUsers.execute(admin, query);
+	return adminLoad(async () => {
+		const admin = requireAdmin(event.locals);
+		const adminContainer = createAdminContainer(event);
+		const query = parseUserListQuery(event.url);
+		const users = await adminContainer.listUsers.execute(admin, query);
 
-	return {
-		...users,
-		query,
-		maskIp: !canSeeRawIpAddress(admin)
-	};
+		return {
+			...users,
+			query,
+			maskIp: !canSeeRawIpAddress(admin)
+		};
+	});
 }
 
 export const actions = {
@@ -34,7 +38,11 @@ export const actions = {
 			return fail(400, { message: 'Invalid status change request' });
 		}
 
-		await adminContainer.setUserStatus.execute(admin, userId, status);
+		try {
+			await adminContainer.setUserStatus.execute(admin, userId, status);
+		} catch (caught) {
+			return adminActionFailure(caught);
+		}
 
 		return { ok: true };
 	},
@@ -49,7 +57,11 @@ export const actions = {
 			return fail(400, { message: 'Invalid role change request' });
 		}
 
-		await adminContainer.setUserRole.execute(admin, userId, role);
+		try {
+			await adminContainer.setUserRole.execute(admin, userId, role);
+		} catch (caught) {
+			return adminActionFailure(caught);
+		}
 
 		return { ok: true };
 	}

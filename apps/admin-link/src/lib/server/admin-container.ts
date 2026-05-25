@@ -21,14 +21,8 @@ import { MockAdminRepository } from '$lib/server/mock-admin-repository';
 import { forwardRefreshCookie } from '$lib/server/refresh-cookie';
 
 function createAdminRepository(event: RequestEvent): AdminRepository {
-	const useMockRepository =
-		env.ADMIN_LINK_DATA_SOURCE === 'mock' ||
-		env.ADMIN_LINK_MOCK_AUTH === 'true' ||
-		(dev && env.ADMIN_LINK_MOCK_REPOSITORY === 'true');
-
-	if (!dev && useMockRepository) {
-		error(500, 'Admin mock repository is development-only');
-	}
+	const useMockRepository = shouldUseMockRepository(env, dev);
+	assertAdminMockRepositoryAllowed(useMockRepository, dev);
 
 	if (useMockRepository) {
 		return new MockAdminRepository();
@@ -73,6 +67,20 @@ async function createAdminCommandHeaders(event: RequestEvent, baseUrl: string) {
 		accept: 'application/json',
 		authorization: `Bearer ${body.accessToken}`
 	};
+}
+
+export function shouldUseMockRepository(environment: Record<string, string | undefined>, isDev: boolean) {
+	return (
+		environment.ADMIN_LINK_DATA_SOURCE === 'mock' ||
+		environment.ADMIN_LINK_MOCK_AUTH === 'true' ||
+		(isDev && environment.ADMIN_LINK_MOCK_REPOSITORY === 'true')
+	);
+}
+
+export function assertAdminMockRepositoryAllowed(useMockRepository: boolean, isDev: boolean) {
+	if (!isDev && useMockRepository) {
+		error(500, 'Admin mock repository is development-only');
+	}
 }
 
 export function createAdminContainer(event: RequestEvent) {

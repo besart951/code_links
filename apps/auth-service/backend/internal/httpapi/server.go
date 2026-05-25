@@ -9,6 +9,7 @@ import (
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/admin"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/auth"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/domain"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/requestmeta"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/token"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/userinfo"
 	"github.com/besart951/code-links/packages/productcatalog"
@@ -21,6 +22,7 @@ type Config struct {
 	CookieDomain       string
 	CookieSecure       bool
 	PublicFrontendURL  string
+	RequestMeta        requestmeta.Resolver
 }
 
 type Server struct {
@@ -29,6 +31,7 @@ type Server struct {
 	admin  *admin.Service
 	users  *userinfo.Service
 	tokens *token.Signer
+	meta   requestmeta.Resolver
 }
 
 type loginRequest struct {
@@ -103,7 +106,7 @@ type userResponse struct {
 }
 
 func NewServer(config Config, authService *auth.Service, adminService *admin.Service, userInfoService *userinfo.Service, tokens *token.Signer) *Server {
-	return &Server{config: config, auth: authService, admin: adminService, users: userInfoService, tokens: tokens}
+	return &Server{config: config, auth: authService, admin: adminService, users: userInfoService, tokens: tokens, meta: config.RequestMeta}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -247,5 +250,33 @@ func writeJSON(w http.ResponseWriter, status int, body any) {
 }
 
 func writeError(w http.ResponseWriter, status int, message string) {
-	writeJSON(w, status, map[string]string{"error": message})
+	writeErrorCode(w, status, defaultErrorCode(status), message)
+}
+
+func writeErrorCode(w http.ResponseWriter, status int, code string, message string) {
+	if code == "" {
+		code = defaultErrorCode(status)
+	}
+	writeJSON(w, status, map[string]string{"error": message, "code": code})
+}
+
+func defaultErrorCode(status int) string {
+	switch status {
+	case http.StatusBadRequest:
+		return "bad_request"
+	case http.StatusUnauthorized:
+		return "unauthorized"
+	case http.StatusForbidden:
+		return "forbidden"
+	case http.StatusNotFound:
+		return "not_found"
+	case http.StatusConflict:
+		return "conflict"
+	case http.StatusTooManyRequests:
+		return "too_many_attempts"
+	case http.StatusBadGateway:
+		return "bad_gateway"
+	default:
+		return "internal"
+	}
 }

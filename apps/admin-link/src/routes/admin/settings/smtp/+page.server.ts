@@ -1,7 +1,7 @@
 import { fail } from '@sveltejs/kit';
 import { hasPermission } from '$lib/domain/admin-access/permissions';
 import type { SmtpEncryption } from '$lib/domain/smtp/types';
-import { formString } from '$lib/server/admin-route-helpers';
+import { adminActionFailure, adminLoad, formString } from '$lib/server/admin-route-helpers';
 import { createAdminContainer } from '$lib/server/admin-container';
 import { requireAdmin } from '$lib/server/auth';
 
@@ -10,13 +10,15 @@ function parseEncryption(value: string): SmtpEncryption {
 }
 
 export async function load(event) {
-	const admin = requireAdmin(event.locals);
-	const adminContainer = createAdminContainer(event);
+	return adminLoad(async () => {
+		const admin = requireAdmin(event.locals);
+		const adminContainer = createAdminContainer(event);
 
-	return {
-		settings: await adminContainer.getSmtpSettings.execute(admin),
-		canUpdate: hasPermission(admin, 'admin.smtp_settings.update')
-	};
+		return {
+			settings: await adminContainer.getSmtpSettings.execute(admin),
+			canUpdate: hasPermission(admin, 'admin.smtp_settings.update')
+		};
+	});
 }
 
 export const actions = {
@@ -33,17 +35,21 @@ export const actions = {
 			return fail(400, { error: true, message: 'Pflichtfelder fehlen.' });
 		}
 
-		await adminContainer.updateSmtpSettings.execute(admin, {
-			host,
-			port,
-			username: formString(formData, 'username'),
-			password: String(formData.get('password') ?? ''),
-			encryption: parseEncryption(String(formData.get('encryption') ?? '')),
-			fromEmail,
-			fromName: formString(formData, 'fromName'),
-			replyToEmail,
-			active: formData.get('active') === 'on'
-		});
+		try {
+			await adminContainer.updateSmtpSettings.execute(admin, {
+				host,
+				port,
+				username: formString(formData, 'username'),
+				password: String(formData.get('password') ?? ''),
+				encryption: parseEncryption(String(formData.get('encryption') ?? '')),
+				fromEmail,
+				fromName: formString(formData, 'fromName'),
+				replyToEmail,
+				active: formData.get('active') === 'on'
+			});
+		} catch (caught) {
+			return adminActionFailure(caught);
+		}
 
 		return { ok: true, message: 'SMTP-Einstellungen gespeichert.' };
 	},
@@ -57,7 +63,11 @@ export const actions = {
 			return fail(400, { error: true, message: 'Empfänger fehlt.' });
 		}
 
-		await adminContainer.sendTestEmail.execute(admin, recipient);
+		try {
+			await adminContainer.sendTestEmail.execute(admin, recipient);
+		} catch (caught) {
+			return adminActionFailure(caught);
+		}
 		return { ok: true, message: 'Test-E-Mail gesendet.' };
 	}
 };

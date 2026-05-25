@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/domain"
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,8 +29,9 @@ type Store struct {
 }
 
 type refreshSession struct {
-	userID    uuid.UUID
-	expiresAt time.Time
+	userID     uuid.UUID
+	expiresAt  time.Time
+	consumedAt *time.Time
 }
 
 type oneTimeToken struct {
@@ -234,25 +236,41 @@ func (s *Store) FindRefreshSession(_ context.Context, tokenHash string) (uuid.UU
 	defer s.mu.RUnlock()
 
 	session, ok := s.sessions[tokenHash]
-	if !ok || time.Now().UTC().After(session.expiresAt) {
+	if !ok || session.consumedAt != nil || time.Now().UTC().After(session.expiresAt) {
 		return uuid.Nil, errNotFound
 	}
 
 	return session.userID, nil
 }
 
-func (s *Store) ConsumeRefreshSession(_ context.Context, tokenHash string) (uuid.UUID, error) {
+func (s *Store) ConsumeRefreshSession(_ context.Context, tokenHash string) (domain.RefreshSessionConsumeResult, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	session, ok := s.sessions[tokenHash]
 	if !ok || time.Now().UTC().After(session.expiresAt) {
-		delete(s.sessions, tokenHash)
-		return uuid.Nil, errNotFound
+		return domain.RefreshSessionConsumeResult{}, errNotFound
+	}
+	if session.consumedAt != nil {
+		return domain.RefreshSessionConsumeResult{UserID: session.userID, Reused: true}, nil
 	}
 
-	delete(s.sessions, tokenHash)
-	return session.userID, nil
+	now := time.Now().UTC()
+	session.consumedAt = &now
+	s.sessions[tokenHash] = session
+	return domain.RefreshSessionConsumeResult{UserID: session.userID}, nil
+}
+
+func (s *Store) RevokeRefreshSessionsForUser(_ context.Context, userID uuid.UUID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	for tokenHash, session := range s.sessions {
+		if session.userID == userID && session.consumedAt == nil {
+			delete(s.sessions, tokenHash)
+		}
+	}
+	return nil
 }
 
 func (s *Store) DeleteRefreshSession(_ context.Context, tokenHash string) error {
@@ -356,6 +374,72 @@ func (s *Store) RecordLoginAttempt(_ context.Context, attempt LoginAttempt) erro
 	}
 
 	s.detectSecurityEventsLocked(attempt)
+	return nil
+}
+
+func (s *Store) CountRecentFailedLoginAttempts(_ context.Context, email string, ipHash string, since time.Time) (domain.LoginFailureCounts, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	email = normalizeEmail(email)
+	var counts domain.LoginFailureCounts
+	for _, attempt := range s.loginAttempts {
+		if attempt.Success || attempt.OccurredAt.Before(since) {
+			continue
+		}
+		if normalizeEmail(attempt.EmailAttempted) == email {
+			counts.Email++
+		}
+		if attempt.IPHash == ipHash {
+			counts.IP++
+		}
+	}
+
+	return counts, nil
+}
+
+func (s *Store) SetUserTemporaryLock(_ context.Context, userID uuid.UUID, lockedUntil time.Time) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	user, ok := s.usersByID[userID]
+	if !ok {
+		return errNotFound
+	}
+	user.LockedUntil = &lockedUntil
+	user.UpdatedAt = time.Now().UTC()
+	s.putUserLocked(user)
+	return nil
+}
+
+func (s *Store) ClearUserTemporaryLock(_ context.Context, userID uuid.UUID) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	user, ok := s.usersByID[userID]
+	if !ok {
+		return errNotFound
+	}
+	user.LockedUntil = nil
+	user.UpdatedAt = time.Now().UTC()
+	s.putUserLocked(user)
+	return nil
+}
+
+func (s *Store) RecordSecurityEvent(_ context.Context, event SecurityEvent) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	if event.ID == uuid.Nil {
+		event.ID = uuid.New()
+	}
+	if event.DetectedAt.IsZero() {
+		event.DetectedAt = time.Now().UTC()
+	}
+	if event.Status == "" {
+		event.Status = "open"
+	}
+	s.securityEvents = append(s.securityEvents, event)
 	return nil
 }
 

@@ -49,6 +49,7 @@ type User struct {
 	PasswordHash         string     `json:"-"`
 	Status               UserStatus `json:"status"`
 	EmailVerifiedAt      *time.Time `json:"emailVerifiedAt"`
+	LockedUntil          *time.Time `json:"lockedUntil"`
 	CreatedAt            time.Time  `json:"createdAt"`
 	UpdatedAt            time.Time  `json:"updatedAt"`
 	LastLoginAt          *time.Time `json:"lastLoginAt"`
@@ -174,6 +175,16 @@ type LoginAttemptListResult struct {
 	PageSize int            `json:"pageSize"`
 }
 
+type LoginFailureCounts struct {
+	Email int
+	IP    int
+}
+
+type RefreshSessionConsumeResult struct {
+	UserID uuid.UUID
+	Reused bool
+}
+
 type SecurityEvent struct {
 	ID              uuid.UUID  `json:"id"`
 	UserID          *uuid.UUID `json:"userId"`
@@ -186,6 +197,11 @@ type SecurityEvent struct {
 	SourceIPAddress string     `json:"sourceIpAddress"`
 	CountryCode     string     `json:"countryCode"`
 }
+
+const (
+	SecurityEventLoginRateLimited  = "login_rate_limited"
+	SecurityEventRefreshTokenReuse = "refresh_token_reuse"
+)
 
 type SmtpEncryption string
 

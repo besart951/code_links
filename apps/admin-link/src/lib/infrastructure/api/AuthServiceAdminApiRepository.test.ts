@@ -23,10 +23,20 @@ describe('AuthServiceAdminApiRepository', () => {
 
 	it('sends command bodies to the Auth Service Admin API', async () => {
 		const fetchImpl = vi.fn(async () => new Response(null, { status: 204 }));
-		const repository = new AuthServiceAdminApiRepository('http://auth-service:8080', fetchImpl, {
-			accept: 'application/json',
-			cookie: 'refresh_token=abc'
-		});
+		const repository = new AuthServiceAdminApiRepository(
+			'http://auth-service:8080',
+			fetchImpl,
+			{
+				accept: 'application/json',
+				cookie: 'refresh_token=abc'
+			},
+			async () => {
+				return {
+					accept: 'application/json',
+					authorization: 'Bearer access-1'
+				};
+			}
+		);
 
 		await repository.setUserStatus('user-1', 'locked');
 
@@ -34,7 +44,7 @@ describe('AuthServiceAdminApiRepository', () => {
 			method: 'PATCH',
 			headers: {
 				accept: 'application/json',
-				cookie: 'refresh_token=abc',
+				authorization: 'Bearer access-1',
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify({ status: 'locked' })

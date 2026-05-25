@@ -33,6 +33,11 @@ type Config struct {
 func Load() Config {
 	environment := env("APP_ENV", "development")
 	smtpSecretKey := smtpSecretKey(environment)
+	jwtPrivateKeyPEM := os.Getenv("JWT_PRIVATE_KEY_PEM")
+	jwtPrivateKeyFile := os.Getenv("JWT_PRIVATE_KEY_FILE")
+	if environment == "production" && jwtPrivateKeyPEM == "" && jwtPrivateKeyFile == "" {
+		log.Fatal("fatal: JWT_PRIVATE_KEY_PEM or JWT_PRIVATE_KEY_FILE must be set in production")
+	}
 
 	return Config{
 		Port:                 env("PORT", "8080"),
@@ -50,8 +55,8 @@ func Load() Config {
 		AccessTokenLifetime:  15 * time.Minute,
 		RefreshTokenLifetime: 30 * 24 * time.Hour,
 		JWTKeyID:             env("JWT_KEY_ID", "dev-key"),
-		JWTPrivateKeyPEM:     os.Getenv("JWT_PRIVATE_KEY_PEM"),
-		JWTPrivateKeyFile:    os.Getenv("JWT_PRIVATE_KEY_FILE"),
+		JWTPrivateKeyPEM:     jwtPrivateKeyPEM,
+		JWTPrivateKeyFile:    jwtPrivateKeyFile,
 		SMTPSecretKey:        smtpSecretKey,
 	}
 }

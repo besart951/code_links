@@ -10,6 +10,7 @@ import (
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/auth"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/domain"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/token"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/userinfo"
 	"github.com/besart951/code-links/packages/productcatalog"
 	"github.com/google/uuid"
 )
@@ -26,6 +27,7 @@ type Server struct {
 	config Config
 	auth   *auth.Service
 	admin  *admin.Service
+	users  *userinfo.Service
 	tokens *token.Signer
 }
 
@@ -53,6 +55,10 @@ type resetPasswordRequest struct {
 
 type purchaseRequest struct {
 	ProductID string `json:"productId"`
+}
+
+type lookupUsersRequest struct {
+	UserIDs []string `json:"userIds"`
 }
 
 type updateUserRequest struct {
@@ -96,8 +102,8 @@ type userResponse struct {
 	Permissions   []domain.AdminPermission `json:"permissions"`
 }
 
-func NewServer(config Config, authService *auth.Service, adminService *admin.Service, tokens *token.Signer) *Server {
-	return &Server{config: config, auth: authService, admin: adminService, tokens: tokens}
+func NewServer(config Config, authService *auth.Service, adminService *admin.Service, userInfoService *userinfo.Service, tokens *token.Signer) *Server {
+	return &Server{config: config, auth: authService, admin: adminService, users: userInfoService, tokens: tokens}
 }
 
 func (s *Server) Handler() http.Handler {
@@ -105,6 +111,7 @@ func (s *Server) Handler() http.Handler {
 	s.registerSystemRoutes(mux)
 	s.registerAuthRoutes(mux)
 	s.registerLicenseRoutes(mux)
+	s.registerUserInfoRoutes(mux)
 	s.registerAdminRoutes(mux)
 
 	return s.withCORS(mux)

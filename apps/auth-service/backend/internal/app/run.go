@@ -16,6 +16,7 @@ import (
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/memory"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/postgres"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/token"
+	"github.com/besart951/code-links/apps/auth-service/backend/internal/userinfo"
 )
 
 type store interface {
@@ -27,6 +28,7 @@ type store interface {
 	admin.NotificationStore
 	admin.AuditStore
 	admin.SessionStore
+	userinfo.Store
 }
 
 func Run(ctx context.Context) error {
@@ -63,13 +65,14 @@ func Run(ctx context.Context) error {
 	adminService := admin.NewService(admin.Config{
 		SMTPSecretKey: cfg.SMTPSecretKey,
 	}, store, store, store, store, processlog.Reader{Path: cfg.RuntimeLogFile}, store, signer, mail.SmtpSender{})
+	userInfoService := userinfo.NewService(store, signer)
 	server := httpapi.NewServer(httpapi.Config{
 		AllowedOrigins:     cfg.AllowedOrigins,
 		EnableMockPurchase: cfg.EnableMockPurchase,
 		CookieDomain:       cfg.CookieDomain,
 		CookieSecure:       cfg.CookieSecure,
 		PublicFrontendURL:  cfg.PublicFrontendURL,
-	}, authService, adminService, signer)
+	}, authService, adminService, userInfoService, signer)
 
 	httpServer := &http.Server{
 		Addr:              ":" + cfg.Port,

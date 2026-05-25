@@ -111,6 +111,24 @@ type AdminActor struct {
 	Permissions []AdminPermission `json:"permissions"`
 }
 
+type UserSnapshot struct {
+	ID            string            `json:"id"`
+	Email         string            `json:"email"`
+	Name          string            `json:"name"`
+	Status        UserStatus        `json:"status"`
+	EmailVerified bool              `json:"emailVerified"`
+	Licenses      []string          `json:"licenses"`
+	Roles         []AdminRole       `json:"roles"`
+	Permissions   []AdminPermission `json:"permissions"`
+	CreatedAt     time.Time         `json:"createdAt"`
+	UpdatedAt     time.Time         `json:"updatedAt"`
+}
+
+type UserCard struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type LoginFailureReason string
 
 const (

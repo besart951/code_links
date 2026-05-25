@@ -48,6 +48,9 @@ func TestServiceSignupLoginRefreshAndReset(t *testing.T) {
 	if refreshed.AccessToken == "" || refreshed.RefreshToken == "" {
 		t.Fatal("expected refreshed session")
 	}
+	if _, err := service.Refresh(ctx, session.RefreshToken); !isKind(err, KindUnauthorized) {
+		t.Fatalf("expected consumed refresh token to be rejected, got %v", err)
+	}
 
 	reset, err := service.ForgotPassword(ctx, "demo@codelinks.dev")
 	if err != nil {

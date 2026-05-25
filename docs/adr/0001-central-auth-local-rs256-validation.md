@@ -10,7 +10,7 @@ CodeLinks has multiple product applications that need a shared login and license
 
 ## Decision
 
-Use a central Auth Service for login, refresh sessions, license grants, and RS256 Access Token issuance. Product backends fetch the Auth Service JWKS, cache the public key in memory, validate incoming Bearer tokens locally, and check their own product ID in the token `licenses` claim.
+Use a central Auth Service for login, refresh sessions, license grants, and RS256 Access Token issuance. Product backends fetch the Auth Service JWKS, cache the public key in memory, validate incoming Bearer tokens locally, and check their own product ID in the token `licenses` claim. Refresh sessions are opaque, httpOnly cookie-backed sessions and are atomically consumed during refresh rotation.
 
 ## Consequences
 

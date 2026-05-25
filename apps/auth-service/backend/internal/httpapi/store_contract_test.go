@@ -116,6 +116,21 @@ func runStoreContract(t *testing.T, store contractStore) {
 	if foundUserID != user.ID {
 		t.Fatalf("expected refresh session for %s, got %s", user.ID, foundUserID)
 	}
+	consumedUserID, err := store.ConsumeRefreshSession(ctx, refreshTokenHash)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if consumedUserID != user.ID {
+		t.Fatalf("expected consumed refresh session for %s, got %s", user.ID, consumedUserID)
+	}
+	if _, err := store.ConsumeRefreshSession(ctx, refreshTokenHash); err == nil {
+		t.Fatal("expected consumed refresh session to fail")
+	}
+
+	refreshTokenHash = secret.HashRefreshToken(uuid.NewString())
+	if err := store.CreateRefreshSession(ctx, refreshTokenHash, user.ID, now.Add(time.Hour)); err != nil {
+		t.Fatal(err)
+	}
 	if err := store.DeleteRefreshSession(ctx, refreshTokenHash); err != nil {
 		t.Fatal(err)
 	}

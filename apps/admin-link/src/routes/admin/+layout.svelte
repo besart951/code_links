@@ -24,7 +24,7 @@
 <Sidebar.Provider>
 	<AppSidebar admin={data.admin} pathname={page.url.pathname} />
 	<Sidebar.Inset>
-		<SiteHeader {title} />
+		<SiteHeader {title} adminMode={data.adminMode} />
 		<main class="@container/main flex flex-1 flex-col gap-6 p-4 lg:p-6">
 			{@render children()}
 		</main>

@@ -21,6 +21,7 @@ type Store interface {
 	GrantLicense(ctx context.Context, userID uuid.UUID, productID string) ([]string, error)
 	CreateRefreshSession(ctx context.Context, tokenHash string, userID uuid.UUID, expiresAt time.Time) error
 	FindRefreshSession(ctx context.Context, tokenHash string) (uuid.UUID, error)
+	ConsumeRefreshSession(ctx context.Context, tokenHash string) (uuid.UUID, error)
 	DeleteRefreshSession(ctx context.Context, tokenHash string) error
 	CreateEmailVerificationToken(ctx context.Context, userID uuid.UUID, tokenHash string, expiresAt time.Time) error
 	VerifyEmailToken(ctx context.Context, tokenHash string, now time.Time) (domain.User, error)
@@ -274,11 +275,10 @@ func (s *Service) Refresh(ctx context.Context, refreshToken string) (Session, er
 		return Session{}, serviceError(KindUnauthorized, "missing refresh token")
 	}
 	tokenHash := secret.HashRefreshToken(refreshToken)
-	userID, err := s.store.FindRefreshSession(ctx, tokenHash)
+	userID, err := s.store.ConsumeRefreshSession(ctx, tokenHash)
 	if err != nil {
 		return Session{}, serviceError(KindUnauthorized, "invalid refresh token")
 	}
-	_ = s.store.DeleteRefreshSession(ctx, tokenHash)
 
 	user, licenses, err := s.store.FindUserByID(ctx, userID)
 	if err != nil {

@@ -9,11 +9,14 @@ import type { RuntimeLogEntry } from '$lib/domain/runtime-logs/types';
 import type { SmtpSettings, UpdateSmtpSettingsInput } from '$lib/domain/smtp/types';
 import type { ManagedUserDetail, UserListItem, UserListQuery, UserStatus } from '$lib/domain/users/types';
 
+type HeaderSource = () => Record<string, string> | Promise<Record<string, string>>;
+
 export class AuthServiceAdminApiRepository implements AdminRepository {
 	constructor(
 		private readonly baseUrl: string,
 		private readonly fetchImpl: typeof fetch,
-		private readonly requestHeaders: Record<string, string>
+		private readonly requestHeaders: Record<string, string>,
+		private readonly commandHeaderSource?: HeaderSource
 	) {}
 
 	private async getJson<T>(path: string): Promise<T> {
@@ -24,6 +27,10 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 		}
 
 		return response.json() as Promise<T>;
+	}
+
+	private async commandHeaders() {
+		return this.commandHeaderSource ? await this.commandHeaderSource() : this.requestHeaders;
 	}
 
 	async getDashboardSummary(): Promise<DashboardSummary> {
@@ -110,7 +117,7 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 		const response = await this.fetchImpl(`${this.baseUrl}/api/admin/settings/smtp`, {
 			method: 'PUT',
 			headers: {
-				...this.requestHeaders,
+				...(await this.commandHeaders()),
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify(input)
@@ -127,7 +134,7 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 		const response = await this.fetchImpl(`${this.baseUrl}/api/admin/settings/smtp/test-email`, {
 			method: 'POST',
 			headers: {
-				...this.requestHeaders,
+				...(await this.commandHeaders()),
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify({ recipient })
@@ -142,7 +149,7 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 		const response = await this.fetchImpl(`${this.baseUrl}/api/admin/users/${userId}/status`, {
 			method: 'PATCH',
 			headers: {
-				...this.requestHeaders,
+				...(await this.commandHeaders()),
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify({ status })
@@ -157,7 +164,7 @@ export class AuthServiceAdminApiRepository implements AdminRepository {
 		const response = await this.fetchImpl(`${this.baseUrl}/api/admin/users/${userId}/role`, {
 			method: 'PATCH',
 			headers: {
-				...this.requestHeaders,
+				...(await this.commandHeaders()),
 				'content-type': 'application/json'
 			},
 			body: JSON.stringify({ role })

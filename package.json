@@ -15,10 +15,10 @@
 		"test:frontend": "pnpm -r --if-present test",
 		"test:e2e": "pnpm --filter code-links test:e2e",
 		"build": "pnpm -r --if-present build && pnpm go:build",
-		"go:test": "go test ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/adminaccess/... ./packages/productauth/... ./packages/productcatalog/... ./packages/productserver/...",
-		"go:test:race": "go test -race ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/adminaccess/... ./packages/productauth/... ./packages/productcatalog/... ./packages/productserver/...",
+		"go:test": "go test ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/adminaccess/... ./packages/authuser/... ./packages/productauth/... ./packages/productcatalog/... ./packages/productserver/...",
+		"go:test:race": "go test -race ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/adminaccess/... ./packages/authuser/... ./packages/productauth/... ./packages/productcatalog/... ./packages/productserver/...",
 		"go:test:postgres": "node scripts/run-postgres-go-tests.mjs",
-		"go:build": "pnpm go:test && go build ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/adminaccess/... ./packages/productauth/... ./packages/productcatalog/... ./packages/productserver/...",
+		"go:build": "pnpm go:test && go build ./apps/auth-service/backend/... ./apps/infra-link/backend/... ./apps/planer-link/backend/... ./apps/loka-link/backend/... ./packages/adminaccess/... ./packages/authuser/... ./packages/productauth/... ./packages/productcatalog/... ./packages/productserver/...",
 		"go:fmt": "node scripts/gofmt.mjs",
 		"go:fmt:check": "node scripts/gofmt.mjs --check",
 		"compose:dev": "docker compose up --build"

@@ -312,15 +312,21 @@ func (s *Server) handleAdminSendTestEmail(w http.ResponseWriter, r *http.Request
 }
 
 func (s *Server) requireAdmin(w http.ResponseWriter, r *http.Request, permission domain.AdminPermission) (domain.AdminActor, bool) {
-	actor, err := s.admin.ResolveActor(r.Context(), adminsvc.Authn{
-		BearerToken:  bearerToken(r),
-		RefreshToken: refreshCookieValue(r),
-	}, permission)
+	authn := adminsvc.Authn{BearerToken: bearerToken(r)}
+	if adminRequestAllowsRefreshCookie(r.Method) {
+		authn.RefreshToken = refreshCookieValue(r)
+	}
+
+	actor, err := s.admin.ResolveActor(r.Context(), authn, permission)
 	if err != nil {
 		writeAdminError(w, err)
 		return domain.AdminActor{}, false
 	}
 	return actor, true
+}
+
+func adminRequestAllowsRefreshCookie(method string) bool {
+	return method == http.MethodGet || method == http.MethodHead
 }
 
 func refreshCookieValue(r *http.Request) string {

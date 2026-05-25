@@ -3,6 +3,7 @@ package postgres
 import "github.com/besart951/code-links/apps/auth-service/backend/internal/domain"
 
 type User = domain.User
+type UserCard = domain.UserCard
 type UserStatus = domain.UserStatus
 type AdminRole = domain.AdminRole
 type AdminPermission = domain.AdminPermission

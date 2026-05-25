@@ -4,6 +4,7 @@ declare global {
 	namespace App {
 		interface Locals {
 			admin: AdminActor | null;
+			adminMode: 'real' | 'mock';
 		}
 	}
 }

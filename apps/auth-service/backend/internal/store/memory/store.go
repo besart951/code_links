@@ -163,6 +163,21 @@ func (s *Store) FindUserByID(_ context.Context, userID uuid.UUID) (User, []strin
 	return user, s.userLicensesLocked(user.ID), nil
 }
 
+func (s *Store) LookupUserCards(_ context.Context, userIDs []uuid.UUID) ([]UserCard, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	cards := make([]UserCard, 0, len(userIDs))
+	for _, userID := range userIDs {
+		user, ok := s.usersByID[userID]
+		if !ok {
+			continue
+		}
+		cards = append(cards, UserCard{ID: user.ID.String(), Name: user.Name})
+	}
+	return cards, nil
+}
+
 func (s *Store) CreateUser(_ context.Context, name string, email string, passwordHash string) (User, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -223,6 +238,20 @@ func (s *Store) FindRefreshSession(_ context.Context, tokenHash string) (uuid.UU
 		return uuid.Nil, errNotFound
 	}
 
+	return session.userID, nil
+}
+
+func (s *Store) ConsumeRefreshSession(_ context.Context, tokenHash string) (uuid.UUID, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	session, ok := s.sessions[tokenHash]
+	if !ok || time.Now().UTC().After(session.expiresAt) {
+		delete(s.sessions, tokenHash)
+		return uuid.Nil, errNotFound
+	}
+
+	delete(s.sessions, tokenHash)
 	return session.userID, nil
 }
 

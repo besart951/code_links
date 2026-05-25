@@ -40,6 +40,38 @@ func (s *Store) FindUserByID(ctx context.Context, userID uuid.UUID) (User, []str
 	return user, licenses, err
 }
 
+func (s *Store) LookupUserCards(ctx context.Context, userIDs []uuid.UUID) ([]UserCard, error) {
+	if len(userIDs) == 0 {
+		return []UserCard{}, nil
+	}
+
+	rows, err := s.pool.Query(ctx, `
+		select users.id, users.name
+		from unnest($1::uuid[]) with ordinality requested(id, ord)
+		join users on users.id = requested.id
+		order by requested.ord
+	`, userIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	cards := []UserCard{}
+	for rows.Next() {
+		var userID uuid.UUID
+		var card UserCard
+		if err := rows.Scan(&userID, &card.Name); err != nil {
+			return nil, err
+		}
+		card.ID = userID.String()
+		cards = append(cards, card)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return cards, nil
+}
+
 func (s *Store) CreateUser(ctx context.Context, name string, email string, passwordHash string) (User, error) {
 	tx, err := s.pool.Begin(ctx)
 	if err != nil {
@@ -118,6 +150,21 @@ func (s *Store) FindRefreshSession(ctx context.Context, tokenHash string) (uuid.
 		from refresh_sessions
 		where token_hash = $1
 		  and expires_at > now()
+	`, tokenHash).Scan(&userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return uuid.Nil, errNotFound
+	}
+
+	return userID, err
+}
+
+func (s *Store) ConsumeRefreshSession(ctx context.Context, tokenHash string) (uuid.UUID, error) {
+	var userID uuid.UUID
+	err := s.pool.QueryRow(ctx, `
+		delete from refresh_sessions
+		where token_hash = $1
+		  and expires_at > now()
+		returning user_id
 	`, tokenHash).Scan(&userID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return uuid.Nil, errNotFound

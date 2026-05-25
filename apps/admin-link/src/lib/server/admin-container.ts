@@ -1,5 +1,6 @@
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
+import { error } from '@sveltejs/kit';
 import type { RequestEvent } from '@sveltejs/kit';
 import { ListActivityEventsUseCase } from '$lib/application/activity/ListActivityEventsUseCase';
 import { ListAuditEntriesUseCase } from '$lib/application/audit/ListAuditEntriesUseCase';
@@ -17,21 +18,61 @@ import { SetUserStatusUseCase } from '$lib/application/users/SetUserStatusUseCas
 import type { AdminRepository } from '$lib/application/ports/AdminRepository';
 import { AuthServiceAdminApiRepository } from '$lib/infrastructure/api/AuthServiceAdminApiRepository';
 import { MockAdminRepository } from '$lib/server/mock-admin-repository';
+import { forwardRefreshCookie } from '$lib/server/refresh-cookie';
 
 function createAdminRepository(event: RequestEvent): AdminRepository {
-	if (
+	const useMockRepository =
 		env.ADMIN_LINK_DATA_SOURCE === 'mock' ||
 		env.ADMIN_LINK_MOCK_AUTH === 'true' ||
-		(dev && env.ADMIN_LINK_MOCK_REPOSITORY === 'true')
-	) {
+		(dev && env.ADMIN_LINK_MOCK_REPOSITORY === 'true');
+
+	if (!dev && useMockRepository) {
+		error(500, 'Admin mock repository is development-only');
+	}
+
+	if (useMockRepository) {
 		return new MockAdminRepository();
 	}
 
 	const baseUrl = (env.AUTH_API_BASE_URL ?? 'http://localhost:8080').replace(/\/$/, '');
-	return new AuthServiceAdminApiRepository(baseUrl, event.fetch, {
-		accept: 'application/json',
-		cookie: event.request.headers.get('cookie') ?? ''
+	let commandHeaders: Promise<Record<string, string>> | undefined;
+	return new AuthServiceAdminApiRepository(
+		baseUrl,
+		event.fetch,
+		{
+			accept: 'application/json',
+			cookie: event.request.headers.get('cookie') ?? ''
+		},
+		() => {
+			commandHeaders ??= createAdminCommandHeaders(event, baseUrl);
+			return commandHeaders;
+		}
+	);
+}
+
+async function createAdminCommandHeaders(event: RequestEvent, baseUrl: string) {
+	const response = await event.fetch(`${baseUrl}/api/auth/refresh`, {
+		method: 'POST',
+		headers: {
+			accept: 'application/json',
+			cookie: event.request.headers.get('cookie') ?? ''
+		}
 	});
+	forwardRefreshCookie(event, response);
+
+	if (!response.ok) {
+		error(response.status === 401 ? 401 : 502, 'Admin session refresh failed');
+	}
+
+	const body = (await response.json().catch(() => ({}))) as { accessToken?: string };
+	if (!body.accessToken) {
+		error(502, 'Admin session refresh did not return access token');
+	}
+
+	return {
+		accept: 'application/json',
+		authorization: `Bearer ${body.accessToken}`
+	};
 }
 
 export function createAdminContainer(event: RequestEvent) {

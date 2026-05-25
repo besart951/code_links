@@ -71,12 +71,15 @@ func Handler(config Config, validator *productauth.RemoteValidator, registrars .
 		writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "productId": config.ProductID})
 	})
 	mux.Handle("GET /api/me", tools.Authenticated(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		claims, _ := productauth.ClaimsFromContext(r.Context())
+		user, _ := productauth.CurrentUserFromContext(r.Context())
 		writeJSON(w, http.StatusOK, map[string]any{
-			"userId":    claims.Subject,
-			"email":     claims.Email,
-			"name":      claims.Name,
-			"productId": config.ProductID,
+			"userId":        user.ID,
+			"email":         user.Email,
+			"name":          user.Name,
+			"status":        user.Status,
+			"emailVerified": user.EmailVerified,
+			"licenses":      user.Licenses,
+			"productId":     config.ProductID,
 		})
 	})))
 	for _, registrar := range registrars {

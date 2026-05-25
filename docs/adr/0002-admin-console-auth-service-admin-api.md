@@ -20,6 +20,8 @@ Admin access is controlled by Admin Roles and canonical `admin.*` Permissions, n
 
 The Auth Service frontend owns public auth screens (`/login`, `/signup`, `/forgot-password`, `/reset-password`) and proxies form submissions to the Go API through SvelteKit server actions. `admin-link` stays an SSR-protected Admin Console and resolves the current Admin Actor by calling `GET /api/admin/me` with the httpOnly refresh cookie.
 
+Admin API reads may resolve the Admin Actor from the httpOnly refresh cookie for SSR. Admin Commands require a Bearer Access Token. `admin-link` mints that Access Token server-side by rotating the Refresh Session before forwarding the Admin Command to the Auth Service.
+
 SMTP passwords are encrypted by the Auth Service with AES-GCM using `SMTP_SECRET_KEY`; a missing key is only tolerated for local development.
 
 ## Consequences

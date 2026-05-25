@@ -30,7 +30,7 @@
 						name="email"
 						type="email"
 						autocomplete="email"
-						value={form?.email ?? 'demo@codelinks.dev'}
+						value={form?.email ?? ''}
 						required
 					/>
 				</Field.Field>
@@ -46,7 +46,6 @@
 						name="password"
 						type="password"
 						autocomplete="current-password"
-						value="password"
 						required
 					/>
 				</Field.Field>

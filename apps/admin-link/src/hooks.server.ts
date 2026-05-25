@@ -1,13 +1,17 @@
 import { dev } from '$app/environment';
 import { env } from '$env/dynamic/private';
-import { redirect, type Handle } from '@sveltejs/kit';
+import { error, redirect, type Handle } from '@sveltejs/kit';
 import { createMockAdminActor } from '$lib/server/mock-admin-auth';
 import type { AdminActor } from '$lib/domain/admin-access/types';
 
 export const handle: Handle = async ({ event, resolve }) => {
 	const allowMockAdmin = env.ADMIN_LINK_MOCK_AUTH === 'true';
-	const requestedRole = event.url.searchParams.get('as') ?? event.cookies.get('admin_role') ?? null;
+	if (!dev && allowMockAdmin) {
+		error(500, 'ADMIN_LINK_MOCK_AUTH is development-only');
+	}
+	const requestedRole = allowMockAdmin ? event.url.searchParams.get('as') ?? event.cookies.get('admin_role') ?? null : null;
 
+	event.locals.adminMode = allowMockAdmin ? 'mock' : 'real';
 	event.locals.admin = allowMockAdmin ? createMockAdminActor(requestedRole) : await fetchAdminActor(event);
 
 	if (event.url.pathname.startsWith('/admin') && !event.locals.admin) {

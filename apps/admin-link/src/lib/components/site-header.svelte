@@ -2,7 +2,7 @@
 	import { Separator } from '@codelinks/ui-library/components/ui/separator';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 
-	let { title }: { title: string } = $props();
+	let { title, adminMode }: { title: string; adminMode?: 'real' | 'mock' } = $props();
 </script>
 
 <header class="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear">
@@ -10,5 +10,8 @@
 		<Sidebar.Trigger class="-ms-1" />
 		<Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
 		<h1 class="text-base font-medium">{title}</h1>
+		{#if adminMode === 'mock'}
+			<span class="ms-auto text-xs font-medium text-muted-foreground">Mock Admin</span>
+		{/if}
 	</div>
 </header>

@@ -17,6 +17,7 @@ import (
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/secret"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/store/memory"
 	"github.com/besart951/code-links/apps/auth-service/backend/internal/token"
+	userinfosvc "github.com/besart951/code-links/apps/auth-service/backend/internal/userinfo"
 )
 
 func TestLoginReturnsAccessTokenAndJWKS(t *testing.T) {
@@ -198,6 +199,39 @@ func TestAdminMeRejectsNonAdminAndAllowsAdmin(t *testing.T) {
 	}
 }
 
+func TestAdminReadAllowsRefreshCookieButCommandsRequireBearer(t *testing.T) {
+	server := newTestServer(t)
+	adminLogin, cookies := loginAndDecodeWithCookies(t, server, "demo@codelinks.dev", "password")
+
+	adminMe := httptest.NewRequest(http.MethodGet, "/api/admin/me", nil)
+	for _, cookie := range cookies {
+		adminMe.AddCookie(cookie)
+	}
+	adminMeRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(adminMeRecorder, adminMe)
+	if adminMeRecorder.Code != http.StatusOK {
+		t.Fatalf("expected admin me with refresh cookie 200, got %d: %s", adminMeRecorder.Code, adminMeRecorder.Body.String())
+	}
+
+	cookieOnlyUpdate := httptest.NewRequest(http.MethodPut, "/api/admin/settings/smtp", bytes.NewBufferString(`{"host":"smtp.example.com","port":587,"encryption":"starttls","fromEmail":"no-reply@example.com","fromName":"CodeLinks","replyToEmail":"support@example.com","active":true}`))
+	for _, cookie := range cookies {
+		cookieOnlyUpdate.AddCookie(cookie)
+	}
+	cookieOnlyRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(cookieOnlyRecorder, cookieOnlyUpdate)
+	if cookieOnlyRecorder.Code != http.StatusUnauthorized {
+		t.Fatalf("expected cookie-only admin command 401, got %d: %s", cookieOnlyRecorder.Code, cookieOnlyRecorder.Body.String())
+	}
+
+	bearerUpdate := httptest.NewRequest(http.MethodPut, "/api/admin/settings/smtp", bytes.NewBufferString(`{"host":"smtp.example.com","port":587,"encryption":"starttls","fromEmail":"no-reply@example.com","fromName":"CodeLinks","replyToEmail":"support@example.com","active":true}`))
+	bearerUpdate.Header.Set("Authorization", "Bearer "+adminLogin.AccessToken)
+	bearerRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(bearerRecorder, bearerUpdate)
+	if bearerRecorder.Code != http.StatusOK {
+		t.Fatalf("expected bearer admin command 200, got %d: %s", bearerRecorder.Code, bearerRecorder.Body.String())
+	}
+}
+
 func TestSMTPSettingsAreEncryptedAndSupportCannotUpdate(t *testing.T) {
 	server := newTestServer(t)
 	adminLogin := loginAndDecode(t, server, "demo@codelinks.dev", "password")
@@ -355,6 +389,41 @@ func TestMockPurchaseGrantsLicenseAndRefreshesAccessToken(t *testing.T) {
 	}
 }
 
+func TestUserInfoMeAndLookup(t *testing.T) {
+	server := newTestServer(t)
+	login := loginAndDecode(t, server, "demo@codelinks.dev", "password")
+
+	me := httptest.NewRequest(http.MethodGet, "/api/userinfo/me", nil)
+	me.Header.Set("Authorization", "Bearer "+login.AccessToken)
+	meRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(meRecorder, me)
+	if meRecorder.Code != http.StatusOK {
+		t.Fatalf("expected userinfo me 200, got %d: %s", meRecorder.Code, meRecorder.Body.String())
+	}
+	var snapshot domain.UserSnapshot
+	if err := json.NewDecoder(meRecorder.Body).Decode(&snapshot); err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.ID != login.User.ID || snapshot.Email != "demo@codelinks.dev" || !snapshot.EmailVerified {
+		t.Fatalf("unexpected snapshot: %#v", snapshot)
+	}
+
+	lookup := httptest.NewRequest(http.MethodPost, "/api/userinfo/lookup", bytes.NewBufferString(`{"userIds":["`+login.User.ID+`"]}`))
+	lookup.Header.Set("Authorization", "Bearer "+login.AccessToken)
+	lookupRecorder := httptest.NewRecorder()
+	server.routes().ServeHTTP(lookupRecorder, lookup)
+	if lookupRecorder.Code != http.StatusOK {
+		t.Fatalf("expected userinfo lookup 200, got %d: %s", lookupRecorder.Code, lookupRecorder.Body.String())
+	}
+	var cards []domain.UserCard
+	if err := json.NewDecoder(lookupRecorder.Body).Decode(&cards); err != nil {
+		t.Fatal(err)
+	}
+	if len(cards) != 1 || cards[0].ID != login.User.ID || cards[0].Name != login.User.Name {
+		t.Fatalf("unexpected cards: %#v", cards)
+	}
+}
+
 func TestMockPurchaseRouteRequiresExplicitDevMode(t *testing.T) {
 	server := newTestServerWithMockPurchase(t, false)
 	login := loginAndDecode(t, server, "demo@codelinks.dev", "password")
@@ -425,14 +494,22 @@ func newTestServerWithMockPurchase(t *testing.T, enableMockPurchase bool) *testS
 	adminService := adminsvc.NewService(adminsvc.Config{
 		SMTPSecretKey: key[:],
 	}, store, store, store, store, staticRuntimeLogs{}, store, signer, appmail.NoopSender{})
+	userInfoService := userinfosvc.NewService(store, signer)
 	server := NewServer(Config{
 		EnableMockPurchase: enableMockPurchase,
 		PublicFrontendURL:  "http://auth.codelinks.localhost",
-	}, authService, adminService, signer)
+	}, authService, adminService, userInfoService, signer)
 	return &testServer{Server: server, store: store, smtpSecretKey: key[:]}
 }
 
 func loginAndDecode(t *testing.T, server *testServer, email string, password string) sessionResponse {
+	t.Helper()
+
+	session, _ := loginAndDecodeWithCookies(t, server, email, password)
+	return session
+}
+
+func loginAndDecodeWithCookies(t *testing.T, server *testServer, email string, password string) (sessionResponse, []*http.Cookie) {
 	t.Helper()
 
 	recorder := httptest.NewRecorder()
@@ -449,7 +526,7 @@ func loginAndDecode(t *testing.T, server *testServer, email string, password str
 		t.Fatal(err)
 	}
 
-	return session
+	return session, recorder.Result().Cookies()
 }
 
 func contains(items []string, value string) bool {

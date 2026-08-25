@@ -94,6 +94,7 @@ services:
     command: sh deploy/docker/run-node-dev.sh --filter code-links dev --host 0.0.0.0
     environment:
       PUBLIC_AUTH_BASE_URL: http://auth.codelinks.localhost
+      PUBLIC_AUTH_APP_URL: http://auth.codelinks.localhost
     ports:
       - "5173:5173"
     volumes:

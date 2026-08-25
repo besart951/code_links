@@ -1,0 +1,96 @@
+name: codelinks-local-backends
+
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: codelinks_auth
+      POSTGRES_USER: codelinks
+      POSTGRES_PASSWORD: codelinks
+    ports:
+      - "5432:5432"
+    volumes:
+      - codelinks-local-postgres:/var/lib/postgresql/data
+
+  auth-service:
+    image: golang:1.26-alpine
+    working_dir: /workspace/apps/auth-service/backend
+    command: sh /workspace/deploy/docker/run-go-dev.sh
+    environment:
+      PORT: "8080"
+      DATABASE_URL: postgres://codelinks:codelinks@postgres:5432/codelinks_auth?sslmode=disable
+      JWT_ISSUER: http://localhost:8080
+      JWT_AUDIENCE: codelinks-products
+      COOKIE_DOMAIN: localhost
+      ALLOWED_ORIGINS: http://localhost:5173,http://localhost:5174,http://localhost:5175,http://localhost:5176,http://localhost:5177,http://localhost:5178,http://localhost:5179
+      ENABLE_MOCK_PURCHASE: "true"
+    depends_on:
+      - postgres
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../..:/workspace
+      - codelinks-local-go-mod:/go/pkg/mod
+      - codelinks-local-go-build:/root/.cache/go-build
+
+  infra-link-api:
+    image: golang:1.26-alpine
+    working_dir: /workspace/apps/infra-link/backend
+    command: sh /workspace/deploy/docker/run-go-dev.sh
+    environment:
+      PORT: "8091"
+      PRODUCT_ID: infra-link
+      AUTH_JWKS_URL: http://auth-service:8080/.well-known/jwks.json
+      JWT_ISSUER: http://localhost:8080
+      JWT_AUDIENCE: codelinks-products
+    depends_on:
+      - auth-service
+    ports:
+      - "8091:8091"
+    volumes:
+      - ../..:/workspace
+      - codelinks-local-go-mod:/go/pkg/mod
+      - codelinks-local-go-build:/root/.cache/go-build
+
+  planer-link-api:
+    image: golang:1.26-alpine
+    working_dir: /workspace/apps/planer-link/backend
+    command: sh /workspace/deploy/docker/run-go-dev.sh
+    environment:
+      PORT: "8092"
+      PRODUCT_ID: planer-link
+      AUTH_JWKS_URL: http://auth-service:8080/.well-known/jwks.json
+      JWT_ISSUER: http://localhost:8080
+      JWT_AUDIENCE: codelinks-products
+    depends_on:
+      - auth-service
+    ports:
+      - "8092:8092"
+    volumes:
+      - ../..:/workspace
+      - codelinks-local-go-mod:/go/pkg/mod
+      - codelinks-local-go-build:/root/.cache/go-build
+
+  loka-link-api:
+    image: golang:1.26-alpine
+    working_dir: /workspace/apps/loka-link/backend
+    command: sh /workspace/deploy/docker/run-go-dev.sh
+    environment:
+      PORT: "8093"
+      PRODUCT_ID: loka-link
+      AUTH_JWKS_URL: http://auth-service:8080/.well-known/jwks.json
+      JWT_ISSUER: http://localhost:8080
+      JWT_AUDIENCE: codelinks-products
+    depends_on:
+      - auth-service
+    ports:
+      - "8093:8093"
+    volumes:
+      - ../..:/workspace
+      - codelinks-local-go-mod:/go/pkg/mod
+      - codelinks-local-go-build:/root/.cache/go-build
+
+volumes:
+  codelinks-local-postgres:
+  codelinks-local-go-mod:
+  codelinks-local-go-build:

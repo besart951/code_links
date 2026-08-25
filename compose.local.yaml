@@ -1,0 +1,4 @@
+name: codelinks-local
+
+include:
+  - path: deploy/docker/compose.backends.yaml
